@@ -110,12 +110,24 @@ class StartScreen:
         self.button_rect = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2, 400, 100)
         self.button_text = self.button_font.render("Start", True, (255, 255, 255))
         
+        # Nút settings ở góc phải trên
+        self.settings_rect = pygame.Rect(WIDTH - 80, 20, 60, 60)
+        
         # Hiệu ứng - tăng số lượng bọt
         self.bubbles = [Bubble() for _ in range(120)]
         self.wave_offset = 0
         self.button_pulse = 0
         self.title_float = 0
         
+        # Khởi tạo và phát nhạc nền
+        pygame.mixer.init()
+        try:
+            pygame.mixer.music.load("resources/assets/sound/sound.mp3")
+            pygame.mixer.music.set_volume(0.5)  # Âm lượng 50%
+            pygame.mixer.music.play(-1)  # Lặp vô hạn
+        except pygame.error as e:
+            print(f"Không thể tải nhạc nền: {e}")
+
     def draw_waves(self):
         wave_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         for i in range(3):
@@ -186,18 +198,66 @@ class StartScreen:
                            (self.button_rect.centerx - self.button_text.get_width() // 2,
                             self.button_rect.centery - self.button_text.get_height() // 2))
 
+            # Vẽ nút settings
+            self.draw_settings_button()
+
             # Sự kiện
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    pygame.mixer.music.stop()  # Dừng nhạc khi thoát
                     running = False
                     self.game.running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key in (pygame.K_ESCAPE, pygame.K_q):
+                        pygame.mixer.music.stop()  # Dừng nhạc khi thoát
                         running = False
                         self.game.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_rect.collidepoint(mouse_pos):
+                        pygame.mixer.music.stop()  # Dừng nhạc khi chuyển màn hình
                         self.game.state = "play"
                         running = False
+                    elif self.settings_rect.collidepoint(mouse_pos):
+                        print("Settings clicked!")
 
             pygame.display.flip()
+
+    def draw_settings_button(self):
+        # Hiệu ứng glow cho nút settings
+        mouse_pos = pygame.mouse.get_pos()
+        is_hovered = self.settings_rect.collidepoint(mouse_pos)
+        
+        glow_alpha = 80 if is_hovered else 40
+        glow_rect = self.settings_rect.inflate(10, 10)
+        draw_gradient_rect(self.screen, glow_rect,
+                         (100, 150, 255, glow_alpha), (150, 200, 255, glow_alpha//2), 
+                         border_radius=30)
+        
+        # Nút settings chính
+        button_color1 = (140, 200, 255) if is_hovered else (120, 180, 240)
+        button_color2 = (180, 160, 255) if is_hovered else (160, 140, 230)
+        draw_gradient_rect(self.screen, self.settings_rect,
+                         button_color1, button_color2, border_radius=25)
+        
+        # Viền
+        border_color = (255, 255, 255, 150) if is_hovered else (255, 255, 255, 100)
+        pygame.draw.rect(self.screen, border_color, self.settings_rect, 2, border_radius=25)
+        
+        # Vẽ icon bánh răng (gear)
+        center = self.settings_rect.center
+        gear_color = (255, 255, 255, 200)
+        
+        # Vẽ bánh răng đơn giản
+        for i in range(8):
+            angle = i * math.pi / 4
+            outer_x = center[0] + math.cos(angle) * 18
+            outer_y = center[1] + math.sin(angle) * 18
+            inner_x = center[0] + math.cos(angle + math.pi/8) * 12
+            inner_y = center[1] + math.sin(angle + math.pi/8) * 12
+            
+            pygame.draw.line(self.screen, gear_color, 
+                           (outer_x, outer_y), (inner_x, inner_y), 3)
+        
+        # Vòng tròn giữa
+        pygame.draw.circle(self.screen, gear_color, center, 8, 2)
+        pygame.draw.circle(self.screen, gear_color, center, 4)

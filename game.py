@@ -1,7 +1,7 @@
 import pygame
 from settings import *
 from screens.start import StartScreen
-# from screens.play import PlayScreen  # sau này thêm
+from screens.play import PlayScreen
 
 class Game:
     def __init__(self):
@@ -17,7 +17,6 @@ class Game:
             if self.state == "start":
                 StartScreen(self).run()
             elif self.state == "play":
-                # TODO: gọi PlayScreen(self).run()
-                self.running = False
+                PlayScreen(self).run()
 
         pygame.quit()
