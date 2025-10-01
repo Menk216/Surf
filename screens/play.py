@@ -1,131 +1,224 @@
+# play_screen.py
 import pygame
 import math
 from settings import *
+from screens.entities import Player
+from screens.spawner import Spawner
 
 class PlayScreen:
     def __init__(self, game):
+        """
+        Màn chơi chính (PlayScreen)
+        game: object chứa ít nhất
+          - screen, clock
+          - images: obstacle_imgs, coin_img, treasure_img, tree_imgs, monster_img, player_img
+        """
         self.game = game
         self.screen = game.screen
         self.clock = game.clock
 
-        # Background gốc
+        # Background
         self.background = pygame.image.load("resources/assets/backgrounds/test.jpg").convert()
         self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
+        self.wave_offset = 0     # hiệu ứng sóng ngang
+        self.scroll_y = 0        # hiệu ứng cuộn dọc
 
-        # Nút back
+        # Nút back (chỉ hiện trong countdown)
         self.back_button = pygame.Rect(30, 30, 60, 60)
         self.back_icon = pygame.image.load("resources/assets/icon/return_icon.png").convert_alpha()
         self.back_icon = pygame.transform.smoothscale(self.back_icon, (32, 32))
 
-        # Hiệu ứng sóng
-        self.wave_offset = 0
-
-        # Countdown
+        # Countdown trước khi chơi
         self.countdown = 3
         self.countdown_timer = 0
-        self.font_big = pygame.font.SysFont("Arial", 120, bold=True)
 
-        # Nhân vật
-        self.character_img = pygame.image.load("resources/assets/characters/player.png").convert_alpha()
-        self.character_img = pygame.transform.smoothscale(self.character_img, (450, 300))  # cho to hơn
-        self.character_pos = [WIDTH // 2, -150]  # bắt đầu từ trên màn hình
-        self.character_active = False
-        self.scroll_y = 0  # để tạo hiệu ứng màn hình di chuyển
+        # Sprite groups
+        self.obstacles = pygame.sprite.Group()
+        self.coins = pygame.sprite.Group()
+        self.treasures = pygame.sprite.Group()
+        self.trees = pygame.sprite.Group()
+        self.monsters = pygame.sprite.Group()
 
-    def draw_background_wave(self):
-        """Tạo hiệu ứng gợn sóng cho background"""
+        groups = {
+            'obstacles': self.obstacles,
+            'coins': self.coins,
+            'treasures': self.treasures,
+            'trees': self.trees,
+            'monsters': self.monsters
+        }
+
+        # Ảnh vật thể (lấy từ game hoặc None)
+        images = {
+            'obstacles': getattr(game, 'obstacle_imgs', []),
+            'coin': getattr(game, 'coin_img', None),
+            'treasure': getattr(game, 'treasure_img', None),
+            'trees': getattr(game, 'tree_imgs', []),
+            'monster': getattr(game, 'monster_img', None)
+        }
+
+        # Player
+        player_img = getattr(game, 'player_img', "resources/assets/characters/player.png")
+        self.player = Player(player_img,
+                             start_x=WIDTH//2, start_y=-200,
+                             target_y=int(HEIGHT*0.62),
+                             size=(150,150), drop_speed=9)
+        self.player_group = pygame.sprite.GroupSingle(self.player)
+
+        # Spawner
+        self.spawner = Spawner(game, groups, images)
+
+        # Gameplay
+        self.running = False
+        self.score = 0
+
+    # ---------------- Vẽ nền ----------------
+    def draw_background(self):
+        """Vẽ nền với hiệu ứng sóng ngang + cuộn dọc"""
         wave_surface = pygame.Surface((WIDTH, HEIGHT))
-
         for y in range(HEIGHT):
-            shift = int(10 * math.sin(y / 30 + self.wave_offset * 0.02))
+            shift = int(10 * math.sin(y/30 + self.wave_offset*0.02))
             line = self.background.subsurface((0, y, WIDTH, 1))
             wave_surface.blit(line, (shift, y))
             if shift > 0:
-                wave_surface.blit(line, (shift - WIDTH, y))
+                wave_surface.blit(line, (shift-WIDTH, y))
             elif shift < 0:
-                wave_surface.blit(line, (shift + WIDTH, y))
+                wave_surface.blit(line, (shift+WIDTH, y))
 
-        # Dời background theo scroll_y
-        self.screen.blit(wave_surface, (0, self.scroll_y % HEIGHT - HEIGHT))
-        self.screen.blit(wave_surface, (0, self.scroll_y % HEIGHT))
+        sy = self.scroll_y % HEIGHT
+        self.screen.blit(wave_surface, (0, sy-HEIGHT))
+        self.screen.blit(wave_surface, (0, sy))
 
     def draw_back_button(self):
-        """Custom nút back"""
-        if self.countdown > 0:  # chỉ hiện trong lúc countdown
-            button_surface = pygame.Surface(self.back_button.size, pygame.SRCALPHA)
-            pygame.draw.rect(button_surface, (0, 0, 0, 100), button_surface.get_rect(), border_radius=15)
-            button_surface.blit(
-                self.back_icon,
-                (
-                    self.back_button.width // 2 - self.back_icon.get_width() // 2,
-                    self.back_button.height // 2 - self.back_icon.get_height() // 2
-                )
-            )
-            self.screen.blit(button_surface, self.back_button.topleft)
+        """Vẽ nút quay lại (trong countdown)"""
+        if self.countdown > 0:
+            btn_surf = pygame.Surface(self.back_button.size, pygame.SRCALPHA)
+            pygame.draw.rect(btn_surf, (0,0,0,120), btn_surf.get_rect(), border_radius=15)
+            btn_surf.blit(self.back_icon,
+                          (self.back_button.width//2 - self.back_icon.get_width()//2,
+                           self.back_button.height//2 - self.back_icon.get_height()//2))
+            self.screen.blit(btn_surf, self.back_button.topleft)
 
     def draw_countdown(self):
+        """Vẽ đồng hồ đếm ngược"""
         if self.countdown > 0:
-            text = self.font_big.render(str(self.countdown), True, (255, 50, 50))
-            rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+            pulse = 1.0 + 0.12 * math.sin(pygame.time.get_ticks() * 0.01)
+            size = int(140 * pulse)
+            font = pygame.font.SysFont("Arial", size, bold=True)
+            text = font.render(str(self.countdown), True, (255,80,40))
+            shadow = font.render(str(self.countdown), True, (0,0,0))
+            rect = text.get_rect(center=(WIDTH//2, HEIGHT//2))
+            self.screen.blit(shadow, (rect.x+6, rect.y+6))
             self.screen.blit(text, rect)
 
-    def draw_character(self):
-        if self.character_active:
-            # Animation nghiêng trái phải (wave effect)
-            angle = math.sin(pygame.time.get_ticks() * 0.005) * 10
-            rotated_img = pygame.transform.rotate(self.character_img, angle)
-            rect = rotated_img.get_rect(center=self.character_pos)
-            self.screen.blit(rotated_img, rect)
+    def draw_score(self):
+        """Vẽ điểm số"""
+        f = pygame.font.SysFont("Arial", 26, bold=True)
+        txt = f.render(f"Score: {self.score}  Coins: {self.player.coins_collected}", True, (255,255,255))
+        self.screen.blit(txt, (WIDTH-240, 20))
 
+    # ---------------- Va chạm ----------------
+    def handle_collisions(self):
+        """Xử lý va chạm & luật chơi"""
+        # Ăn coin
+        coins_hit = pygame.sprite.spritecollide(self.player, self.coins, dokill=True)
+        if coins_hit:
+            self.player.coins_collected += len(coins_hit)
+            self.score += 5 * len(coins_hit)
+
+        # Ăn treasure
+        treasures_hit = pygame.sprite.spritecollide(self.player, self.treasures, dokill=True)
+        if treasures_hit:
+            self.score += 50 * len(treasures_hit)
+
+        # Đụng obstacle = thua
+        if pygame.sprite.spritecollideany(self.player, self.obstacles):
+            self.game.state = "game_over"
+            return True
+
+        # Đụng tree = spawn monster
+        trees_hit = pygame.sprite.spritecollide(self.player, self.trees, dokill=False)
+        for t in trees_hit:
+            if not getattr(t, 'called_monster', False):
+                t.called_monster = True
+                self.spawner.spawn_monster_from_tree(t, self.player)
+
+        # Nếu có monster và player đang va vào tree = thua
+        if len(self.monsters) > 0 and len(trees_hit) > 0:
+            self.game.state = "game_over"
+            return True
+
+        # Monster đụng obstacle = chết
+        pygame.sprite.groupcollide(self.monsters, self.obstacles, True, False)
+
+        return False
+
+    # ---------------- Loop chính ----------------
     def run(self):
-        running = True
-        while running and self.game.running:
+        self.running = True
+        while self.running and self.game.running:
             dt = self.clock.tick(FPS)
             self.wave_offset += 2
+            self.scroll_y += 1
 
-            # Update countdown
+            # Countdown
             if self.countdown > 0:
                 self.countdown_timer += dt
-                if self.countdown_timer >= 1000:  # mỗi giây giảm 1
+                if self.countdown_timer >= 1000:
                     self.countdown -= 1
                     self.countdown_timer = 0
-                if self.countdown == 0:
-                    self.character_active = True
 
-            # Vẽ background
-            self.draw_background_wave()
+            # Event
+            for e in pygame.event.get():
+                if e.type == pygame.QUIT:
+                    self.running = False
+                    self.game.running = False
+                elif e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
+                    self.game.state = "start"
+                    self.running = False
+                elif e.type == pygame.MOUSEBUTTONDOWN and self.countdown > 0:
+                    if self.back_button.collidepoint(e.pos):
+                        self.game.state = "start"
+                        self.running = False
 
-            # Vẽ nút back hoặc countdown
+            # Vẽ nền
+            self.draw_background()
+
+            # Update / spawn
+            if self.countdown <= 0:
+                self.spawner.maybe_spawn_every_frame(dt)
+                self.obstacles.update(dt, 0)
+                self.coins.update(dt, 0)
+                self.treasures.update(dt, 0)
+                self.trees.update(dt, 0)
+                self.monsters.update(dt, 0)
+            else:
+                # countdown thì update nhẹ thôi
+                self.obstacles.update(dt, 0)
+                self.coins.update(dt, 0)
+                self.treasures.update(dt, 0)
+                self.trees.update(dt, 0)
+                self.monsters.update(dt, 0)
+
+            # Update player (luôn hoạt động để hiệu ứng rơi xuống xuất hiện)
+            mouse_pos = pygame.mouse.get_pos()
+            self.player.update(dt, mouse_pos)
+
+            # Vẽ sprites
+            self.obstacles.draw(self.screen)
+            self.trees.draw(self.screen)
+            self.coins.draw(self.screen)
+            self.treasures.draw(self.screen)
+            self.monsters.draw(self.screen)
+            self.player_group.draw(self.screen)
+
+            # HUD
             self.draw_back_button()
             self.draw_countdown()
+            self.draw_score()
 
-            # Nhân vật trượt xuống ban đầu
-            if self.character_active:
-                if self.character_pos[1] < HEIGHT // 2 + 100:  # cho nó trượt xuống tới gần giữa
-                    self.character_pos[1] += 5
-
-                # Nhân vật theo chuột
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-                self.character_pos[0] += (mouse_x - self.character_pos[0]) * 0.1
-                self.character_pos[1] += (mouse_y - self.character_pos[1]) * 0.05
-
-                # Background di chuyển khi nhân vật di chuyển
-                self.scroll_y += 2
-
-                self.draw_character()
-
-            # Xử lý event
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    self.game.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.game.state = "start"
-                        running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.back_button.collidepoint(event.pos) and self.countdown > 0:
-                        self.game.state = "start"
-                        running = False
+            # Va chạm (sau khi countdown xong)
+            if self.countdown <= 0:
+                if self.handle_collisions():
+                    self.running = False
 
             pygame.display.flip()
