@@ -142,6 +142,7 @@ class PlayScreen:
             return True
 
         # Đụng tree = spawn monster
+        # Đụng tree = spawn monster
         trees_hit = pygame.sprite.spritecollide(
             self.player, self.trees, dokill=False, collided=pygame.sprite.collide_mask
         )
@@ -150,15 +151,13 @@ class PlayScreen:
                 t.called_monster = True
                 self.spawner.spawn_monster_from_tree(t, self.player)
 
-        # Nếu có monster và player đang va vào tree = thua
-        if len(self.monsters) > 0 and len(trees_hit) > 0:
+        # Player đụng trực tiếp monster = thua
+        if pygame.sprite.spritecollideany(
+            self.player, self.monsters, collided=pygame.sprite.collide_mask
+        ):
             self.game.state = "game_over"
             return True
 
-        # Monster đụng obstacle = chết
-        pygame.sprite.groupcollide(
-            self.monsters, self.obstacles, True, False, collided=pygame.sprite.collide_mask
-        )
 
         return False
 

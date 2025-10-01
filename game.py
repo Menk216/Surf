@@ -28,6 +28,7 @@ class Game:
             pygame.image.load("resources/assets/backgrounds/12.png").convert_alpha(),
             pygame.image.load("resources/assets/backgrounds/13.png").convert_alpha(),
         ]
+        
         self.obstacle_imgs = [pygame.transform.smoothscale(img, (150, 150)) for img in self.obstacle_imgs]
 
         # Đồng xu
