@@ -2,6 +2,8 @@ import pygame
 from settings import *
 from screens.start import StartScreen
 from screens.play import PlayScreen
+from screens.gameover import GameOverScreen
+
 
 class Game:
     def __init__(self):
@@ -12,7 +14,7 @@ class Game:
         self.running = True
         self.state = "start"
 
-        # ==== TẢI TÀI NGUYÊN Ở ĐÂY ====
+        # ==== TẢI TÀI NGUYÊN ====
         # Người chơi
         self.player_img = pygame.image.load("resources/assets/characters/player.png").convert_alpha()
         self.player_img = pygame.transform.smoothscale(self.player_img, (120, 120))
@@ -47,16 +49,18 @@ class Game:
         self.monster_img = pygame.image.load("resources/assets/backgrounds/9.png").convert_alpha()
         self.monster_img = pygame.transform.smoothscale(self.monster_img, (200, 200))
 
-        # Âm thanh
-        # self.coin_sound = pygame.mixer.Sound("res/sound/coin.wav")
-        # self.treasure_sound = pygame.mixer.Sound("res/sound/treasure.wav")
-        # self.hit_sound = pygame.mixer.Sound("res/sound/hit.wav")
-
     def run(self):
+        start_screen = StartScreen(self)
+        play_screen = PlayScreen(self)
+        game_over_screen = GameOverScreen(self)
+
         while self.running:
             if self.state == "start":
-                StartScreen(self).run()
+                start_screen.run()
             elif self.state == "play":
-                PlayScreen(self).run()
+                play_screen.run()
+            elif self.state == "game_over":
+                game_over_screen.run()
 
         pygame.quit()
+

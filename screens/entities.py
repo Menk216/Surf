@@ -55,7 +55,7 @@ class Player(pygame.sprite.Sprite):
 # Obstacle
 # ------------------------------
 class Obstacle(pygame.sprite.Sprite):
-    def __init__(self, image_surface, x, y=-220, size=(200,200), speed=6):
+    def __init__(self, image_surface, x, y=-220, size=(100,100), speed=6):
         super().__init__()
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
@@ -89,7 +89,7 @@ class Coin(pygame.sprite.Sprite):
 # Treasure
 # ------------------------------
 class Treasure(pygame.sprite.Sprite):
-    def __init__(self, image_surface, x, y=-180, size=(130,130), speed=5):
+    def __init__(self, image_surface, x, y=-180, size=(100,100), speed=5):
         super().__init__()
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
@@ -106,7 +106,7 @@ class Treasure(pygame.sprite.Sprite):
 # Tree
 # ------------------------------
 class Tree(pygame.sprite.Sprite):
-    def __init__(self, image_surface, x, y=-200, size=(180,200), speed=6):
+    def __init__(self, image_surface, x, y=-200, size=(100,100), speed=6):
         super().__init__()
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
