@@ -14,8 +14,12 @@ class GameOverScreen:
                     running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:  # Restart
+                        from screens.play import PlayScreen
+                        play_screen = PlayScreen(self.game)
                         self.game.state = "play"
+                        play_screen.run()
                         running = False
+
                     elif event.key == pygame.K_q:  # Quit
                         self.game.running = False
                         running = False
