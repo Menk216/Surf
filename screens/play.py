@@ -102,7 +102,7 @@ class PlayScreen:
         """Vẽ đồng hồ đếm ngược"""
         if self.countdown > 0:
             pulse = 1.0 + 0.12 * math.sin(pygame.time.get_ticks() * 0.01)
-            size = int(140 * pulse)
+            size = int(200 * pulse)
             font = pygame.font.SysFont("Arial", size, bold=True)
             text = font.render(str(self.countdown), True, (255,80,40))
             shadow = font.render(str(self.countdown), True, (0,0,0))
@@ -112,7 +112,7 @@ class PlayScreen:
 
     def draw_score(self):
         """Vẽ điểm số"""
-        f = pygame.font.SysFont("Arial", 26, bold=True)
+        f = pygame.font.SysFont("Arial", 30, bold=True)
         txt = f.render(f"Score: {self.score}  Coins: {self.player.coins_collected}", True, (255,255,255))
         self.screen.blit(txt, (WIDTH-240, 20))
 
@@ -120,23 +120,31 @@ class PlayScreen:
     def handle_collisions(self):
         """Xử lý va chạm & luật chơi"""
         # Ăn coin
-        coins_hit = pygame.sprite.spritecollide(self.player, self.coins, dokill=True)
+        coins_hit = pygame.sprite.spritecollide(
+            self.player, self.coins, dokill=True, collided=pygame.sprite.collide_mask
+        )
         if coins_hit:
             self.player.coins_collected += len(coins_hit)
             self.score += 5 * len(coins_hit)
 
         # Ăn treasure
-        treasures_hit = pygame.sprite.spritecollide(self.player, self.treasures, dokill=True)
+        treasures_hit = pygame.sprite.spritecollide(
+            self.player, self.treasures, dokill=True, collided=pygame.sprite.collide_mask
+        )
         if treasures_hit:
             self.score += 50 * len(treasures_hit)
 
         # Đụng obstacle = thua
-        if pygame.sprite.spritecollideany(self.player, self.obstacles):
+        if pygame.sprite.spritecollideany(
+            self.player, self.obstacles, collided=pygame.sprite.collide_mask
+        ):
             self.game.state = "game_over"
             return True
 
         # Đụng tree = spawn monster
-        trees_hit = pygame.sprite.spritecollide(self.player, self.trees, dokill=False)
+        trees_hit = pygame.sprite.spritecollide(
+            self.player, self.trees, dokill=False, collided=pygame.sprite.collide_mask
+        )
         for t in trees_hit:
             if not getattr(t, 'called_monster', False):
                 t.called_monster = True
@@ -148,9 +156,12 @@ class PlayScreen:
             return True
 
         # Monster đụng obstacle = chết
-        pygame.sprite.groupcollide(self.monsters, self.obstacles, True, False)
+        pygame.sprite.groupcollide(
+            self.monsters, self.obstacles, True, False, collided=pygame.sprite.collide_mask
+        )
 
         return False
+
 
     # ---------------- Loop chính ----------------
     def run(self):

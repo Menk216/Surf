@@ -14,6 +14,7 @@ class Player(pygame.sprite.Sprite):
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
         self.rect = self.image.get_rect(center=(start_x, start_y))
+        self.mask = pygame.mask.from_surface(self.image)   # <--- thêm mask
 
         # dừng ở đâu khi rơi xuống
         self.target_y = target_y if target_y is not None else int(HEIGHT * 0.62)
@@ -49,6 +50,7 @@ class Player(pygame.sprite.Sprite):
             old_center = self.rect.center
             self.image = pygame.transform.rotate(self.base_img, angle)
             self.rect = self.image.get_rect(center=old_center)
+            self.mask = pygame.mask.from_surface(self.image)   # <--- cập nhật mask khi xoay
 
 
 # ------------------------------
@@ -60,6 +62,7 @@ class Obstacle(pygame.sprite.Sprite):
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
         self.rect = self.image.get_rect(center=(x, y))
+        self.mask = pygame.mask.from_surface(self.image)   # <--- thêm mask
         self.speed = speed
 
     def update(self, dt, scroll_speed=0):
@@ -77,6 +80,7 @@ class Coin(pygame.sprite.Sprite):
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
         self.rect = self.image.get_rect(center=(x, y))
+        self.mask = pygame.mask.from_surface(self.image)   # <--- thêm mask
         self.speed = speed
 
     def update(self, dt, scroll_speed=0):
@@ -94,6 +98,7 @@ class Treasure(pygame.sprite.Sprite):
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
         self.rect = self.image.get_rect(center=(x, y))
+        self.mask = pygame.mask.from_surface(self.image)   # <--- thêm mask
         self.speed = speed
 
     def update(self, dt, scroll_speed=0):
@@ -111,6 +116,7 @@ class Tree(pygame.sprite.Sprite):
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
         self.rect = self.image.get_rect(center=(x, y))
+        self.mask = pygame.mask.from_surface(self.image)   # <--- thêm mask
         self.speed = speed
         self.called_monster = False
 
@@ -131,6 +137,7 @@ class Monster(pygame.sprite.Sprite):
         self.image = self.base_img
         px = player_sprite.rect.centerx if spawn_x is None else spawn_x
         self.rect = self.image.get_rect(midbottom=(px, spawn_y))
+        self.mask = pygame.mask.from_surface(self.image)   # <--- thêm mask
         self.speed = speed
         self.player = player_sprite
         self.spawn_time = pygame.time.get_ticks()
