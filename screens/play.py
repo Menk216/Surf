@@ -70,6 +70,10 @@ class PlayScreen:
         # Gameplay
         self.running = False
         self.score = 0
+        # Timer bất tử
+        self.invincible_timer = 0  # Timer bất tử (ms)
+        self.invincible_blink_timer = 0  # Timer cho hiệu ứng nhấp nháy
+
 
     # ---------------- Vẽ nền ----------------
     def draw_background(self):
@@ -119,6 +123,7 @@ class PlayScreen:
     # ---------------- Va chạm ----------------
     def handle_collisions(self):
         """Xử lý va chạm & luật chơi"""
+        
         # Ăn coin
         coins_hit = pygame.sprite.spritecollide(
             self.player, self.coins, dokill=True, collided=pygame.sprite.collide_mask
@@ -126,22 +131,33 @@ class PlayScreen:
         if coins_hit:
             self.player.coins_collected += len(coins_hit)
             self.score += 5 * len(coins_hit)
-
+        
         # Ăn treasure
         treasures_hit = pygame.sprite.spritecollide(
             self.player, self.treasures, dokill=True, collided=pygame.sprite.collide_mask
         )
         if treasures_hit:
             self.score += 50 * len(treasures_hit)
-
+        
+        # Nếu đang bất tử, bỏ qua va chạm với obstacle và monster
+        if self.invincible_timer > 0:
+            # Vẫn xử lý tree spawn monster
+            trees_hit = pygame.sprite.spritecollide(
+                self.player, self.trees, dokill=False, collided=pygame.sprite.collide_mask
+            )
+            for t in trees_hit:
+                if not getattr(t, 'called_monster', False):
+                    t.called_monster = True
+                    self.spawner.spawn_monster_from_tree(t, self.player)
+            return False
+        
         # Đụng obstacle = thua
         if pygame.sprite.spritecollideany(
             self.player, self.obstacles, collided=pygame.sprite.collide_mask
         ):
             self.game.state = "game_over"
             return True
-
-        # Đụng tree = spawn monster
+        
         # Đụng tree = spawn monster
         trees_hit = pygame.sprite.spritecollide(
             self.player, self.trees, dokill=False, collided=pygame.sprite.collide_mask
@@ -150,16 +166,16 @@ class PlayScreen:
             if not getattr(t, 'called_monster', False):
                 t.called_monster = True
                 self.spawner.spawn_monster_from_tree(t, self.player)
-
+        
         # Player đụng trực tiếp monster = thua
         if pygame.sprite.spritecollideany(
             self.player, self.monsters, collided=pygame.sprite.collide_mask
         ):
             self.game.state = "game_over"
             return True
-
-
+        
         return False
+
 
 
     # ---------------- Loop chính ----------------
@@ -219,6 +235,19 @@ class PlayScreen:
             self.coins.draw(self.screen)
             self.treasures.draw(self.screen)
             self.monsters.draw(self.screen)
+            # Update invincible timer và hiệu ứng nhấp nháy
+            if self.invincible_timer > 0:
+                self.invincible_timer -= dt
+                self.invincible_blink_timer += dt
+                
+                # Nhấp nháy: mỗi 150ms đổi alpha
+                if int(self.invincible_blink_timer / 150) % 2 == 0:
+                    self.player.image.set_alpha(80)
+                else:
+                    self.player.image.set_alpha(255)
+            else:
+                self.player.image.set_alpha(255)
+
             self.player_group.draw(self.screen)
 
             # HUD
@@ -229,6 +258,10 @@ class PlayScreen:
             # Va chạm (sau khi countdown xong)
             if self.countdown <= 0:
                 if self.handle_collisions():
+                    from screens.gameover import GameOverScreen
+                    gameover_screen = GameOverScreen(self.game, self)  # Truyền self (PlayScreen)
+                    gameover_screen.run()
                     self.running = False
+
 
             pygame.display.flip()
