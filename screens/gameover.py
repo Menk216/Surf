@@ -62,7 +62,7 @@ class GameOverScreen:
             font_small = pygame.font.SysFont("Arial", 45, bold=True)
             
             restart_text = font_small.render("Press R to Restart", True, (255, 255, 255))
-            continue_text = font_small.render("Press C to Continue (Invincible 3s)", True, (100, 255, 100))
+            continue_text = font_small.render("Press C to Continue", True, (100, 255, 100))
             quit_text = font_small.render("Press Q to Quit", True, (255, 100, 100))
             
             y_start = HEIGHT // 2
