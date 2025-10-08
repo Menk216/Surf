@@ -4,7 +4,7 @@ import random
 from screens.entities import Obstacle, Coin, Treasure, Tree, Monster
 
 class Spawner:
-    def __init__(self, game, groups, images, speeds=None, spawn_delay_ms=3000, rates=None):
+    def __init__(self, game, groups, images, speeds=None, spawn_delay_ms=2000, rates=None):  # Giảm delay từ 3000 xuống 2000
     
 
         """
@@ -23,11 +23,11 @@ class Spawner:
 
         # tốc độ rơi (nếu không truyền thì lấy mặc định)
         self.base_scroll_speed = 0
-        self.obstacle_speed = (speeds.get('obstacle') if speeds else 6)
-        self.coin_speed = (speeds.get('coin') if speeds else 6)
-        self.tree_speed = (speeds.get('tree') if speeds else 6)
-        self.treasure_speed = (speeds.get('treasure') if speeds else 5)
-        self.monster_speed = (speeds.get('monster') if speeds else 6)
+        self.obstacle_speed = (speeds.get('obstacle') if speeds else 8)  # Tăng từ 6 lên 8
+        self.coin_speed = (speeds.get('coin') if speeds else 8)  # Tăng từ 6 lên 8
+        self.tree_speed = (speeds.get('tree') if speeds else 8)  # Tăng từ 6 lên 8
+        self.treasure_speed = (speeds.get('treasure') if speeds else 7)  # Tăng từ 5 lên 7
+        self.monster_speed = (speeds.get('monster') if speeds else 8)  # Tăng từ 6 lên 8
 
         # các pattern x cố định cho obstacles (để spawn theo hàng/cột)
         w = WIDTH
@@ -41,10 +41,10 @@ class Spawner:
 
         # tỉ lệ spawn mặc định (per second, thay vì per frame → không phụ thuộc FPS)
         default_rates = {
-            'obstacle_group': 0.48,   # ~0.8% mỗi frame nếu 60 FPS
-            'single_obstacle': 1.2,   # ~2% mỗi frame nếu 60 FPS
-            'coin': 2.7,              # ~4.5% mỗi frame nếu 60 FPS
-            'tree': 0.6,              # ~1% mỗi frame nếu 60 FPS
+            'obstacle_group': 0.8,   # Tăng từ 0.48 lên 0.8
+            'single_obstacle': 2.0,   # Tăng từ 1.2 lên 2.0
+            'coin': 4.0,              # Tăng từ 2.7 lên 4.0
+            'tree': 1.0,              # Tăng từ 0.6 lên 1.0
         }
         self.rates = rates if rates else default_rates
 

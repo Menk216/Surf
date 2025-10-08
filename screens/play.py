@@ -4,6 +4,9 @@ import math
 from settings import *
 from screens.entities import Player
 from screens.spawner import Spawner
+from theme_manager import ThemeManager
+from ui_manager import UIManager
+from power_up_manager import PowerUpManager
 
 class PlayScreen:
     def __init__(self, game):
@@ -17,6 +20,10 @@ class PlayScreen:
         self.screen = game.screen
         self.clock = game.clock
 
+        # Theme và UI Manager
+        self.theme_manager = ThemeManager()
+        self.ui_manager = UIManager(self.theme_manager)
+        
         # Background
         self.background = pygame.image.load("resources/assets/backgrounds/test.jpg").convert()
         self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
@@ -38,13 +45,15 @@ class PlayScreen:
         self.treasures = pygame.sprite.Group()
         self.trees = pygame.sprite.Group()
         self.monsters = pygame.sprite.Group()
+        self.power_ups = pygame.sprite.Group()
 
         groups = {
             'obstacles': self.obstacles,
             'coins': self.coins,
             'treasures': self.treasures,
             'trees': self.trees,
-            'monsters': self.monsters
+            'monsters': self.monsters,
+            'power_ups': self.power_ups
         }
 
         # Ảnh vật thể (lấy từ game hoặc None)
@@ -61,11 +70,14 @@ class PlayScreen:
         self.player = Player(player_img,
                              start_x=WIDTH//2, start_y=-200,
                              target_y=int(HEIGHT*0.62),
-                             size=(150,150), drop_speed=9)
+                             size=(150,150), drop_speed=15)  # Tăng từ 12 lên 15
         self.player_group = pygame.sprite.GroupSingle(self.player)
 
         # Spawner
         self.spawner = Spawner(game, groups, images)
+        
+        # Power-up Manager
+        self.power_up_manager = PowerUpManager(game, groups, images)
 
         # Gameplay
         self.running = False
@@ -73,24 +85,65 @@ class PlayScreen:
         # Timer bất tử
         self.invincible_timer = 0  # Timer bất tử (ms)
         self.invincible_blink_timer = 0  # Timer cho hiệu ứng nhấp nháy
+        
+        # Khởi tạo và phát nhạc nền cho PlayScreen
+        try:
+            pygame.mixer.music.load("resources/assets/sound/sound.mp3")
+            pygame.mixer.music.set_volume(0.7)  # Âm lượng 70%
+            pygame.mixer.music.play(-1)  # Lặp vô hạn
+            print("PlayScreen music started!")
+        except pygame.error as e:
+            print(f"Cannot load PlayScreen music: {e}")
 
 
     # ---------------- Vẽ nền ----------------
     def draw_background(self):
-        """Vẽ nền với hiệu ứng sóng ngang + cuộn dọc"""
-        wave_surface = pygame.Surface((WIDTH, HEIGHT))
-        for y in range(HEIGHT):
-            shift = int(10 * math.sin(y/30 + self.wave_offset*0.02))
-            line = self.background.subsurface((0, y, WIDTH, 1))
-            wave_surface.blit(line, (shift, y))
-            if shift > 0:
-                wave_surface.blit(line, (shift-WIDTH, y))
-            elif shift < 0:
-                wave_surface.blit(line, (shift+WIDTH, y))
-
+        """Vẽ nền với hiệu ứng sóng ngang + cuộn dọc và theme"""
+        theme = self.theme_manager.get_current_theme()
+        
+        # Tạo surface với màu nền theme
+        background_surface = pygame.Surface((WIDTH, HEIGHT))
+        background_surface.fill(theme['background_color'])
+        
+        # Vẽ background image với độ trong suốt theo theme
+        if self.background:
+            # Áp dụng ambient light từ theme
+            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            overlay.fill((255, 255, 255, int(255 * theme['ambient_light'])))
+            
+            wave_surface = pygame.Surface((WIDTH, HEIGHT))
+            for y in range(0, HEIGHT, 4):  # Vẽ mỗi 4 pixel để tăng tốc hơn
+                shift = int(6 * math.sin(y/50 + self.wave_offset*0.01) * theme['wave_intensity'])  # Giảm độ mạnh hơn
+                line = self.background.subsurface((0, y, WIDTH, 4))  # Lấy 4 pixel cùng lúc
+                wave_surface.blit(line, (shift, y))
+                if shift > 0:
+                    wave_surface.blit(line, (shift-WIDTH, y))
+                elif shift < 0:
+                    wave_surface.blit(line, (shift+WIDTH, y))
+            
+            # Áp dụng overlay để điều chỉnh độ sáng
+            wave_surface.blit(overlay, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            background_surface.blit(wave_surface, (0, 0))
+        
+        # Vẽ hiệu ứng nước với màu theme (tối ưu hóa)
+        water_overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        for y in range(0, HEIGHT, 4):  # Vẽ mỗi 4 pixel để tăng tốc hơn
+            alpha = int(80 * (1 - y / HEIGHT))  # Tăng alpha để nước đậm hơn
+            water_color = (*theme['water_color'][:3], alpha)
+            pygame.draw.line(water_overlay, water_color, (0, y), (WIDTH, y))
+        
+        background_surface.blit(water_overlay, (0, 0))
+        
+        # Thêm overlay tối cho theme đêm
+        if theme['name'] == "Đêm":
+            dark_overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            dark_overlay.fill((0, 0, 0, 100))  # Overlay đen với alpha 100
+            background_surface.blit(dark_overlay, (0, 0))
+        
+        # Cuộn dọc
         sy = self.scroll_y % HEIGHT
-        self.screen.blit(wave_surface, (0, sy-HEIGHT))
-        self.screen.blit(wave_surface, (0, sy))
+        self.screen.blit(background_surface, (0, sy-HEIGHT))
+        self.screen.blit(background_surface, (0, sy))
 
     def draw_back_button(self):
         """Vẽ nút quay lại (trong countdown)"""
@@ -103,22 +156,33 @@ class PlayScreen:
             self.screen.blit(btn_surf, self.back_button.topleft)
 
     def draw_countdown(self):
-        """Vẽ đồng hồ đếm ngược"""
+        """Vẽ đồng hồ đếm ngược với theme"""
         if self.countdown > 0:
+            theme = self.theme_manager.get_current_theme()
             pulse = 1.0 + 0.12 * math.sin(pygame.time.get_ticks() * 0.01)
             size = int(200 * pulse)
             font = pygame.font.SysFont("Arial", size, bold=True)
-            text = font.render(str(self.countdown), True, (255,80,40))
-            shadow = font.render(str(self.countdown), True, (0,0,0))
+            text = font.render(str(self.countdown), True, theme['accent_color'])
+            shadow = font.render(str(self.countdown), True, theme['shadow_color'])
             rect = text.get_rect(center=(WIDTH//2, HEIGHT//2))
+            
+            # Hiệu ứng glow
+            glow_surface = pygame.Surface((rect.width + 40, rect.height + 40), pygame.SRCALPHA)
+            for i in range(20):
+                alpha = int(50 * (1 - i / 20))
+                glow_color = (*theme['accent_color'][:3], alpha)
+                glow_rect = pygame.Rect(i, i, rect.width + 40 - i*2, rect.height + 40 - i*2)
+                pygame.draw.rect(glow_surface, glow_color, glow_rect, border_radius=size//4)
+            
+            self.screen.blit(glow_surface, (rect.x - 20, rect.y - 20))
             self.screen.blit(shadow, (rect.x+6, rect.y+6))
             self.screen.blit(text, rect)
 
     def draw_score(self):
-        """Vẽ điểm số"""
-        f = pygame.font.SysFont("Arial", 30, bold=True)
-        txt = f.render(f"Score: {self.score}  Coins: {self.player.coins_collected}", True, (255,255,255))
-        self.screen.blit(txt, (WIDTH-240, 20))
+        """Vẽ điểm số với UI mới"""
+        self.ui_manager.draw_score_panel(self.screen, self.score)
+        self.ui_manager.draw_coin_panel(self.screen, self.player.coins_collected)
+        self.ui_manager.draw_theme_indicator(self.screen)
 
     # ---------------- Va chạm ----------------
     def handle_collisions(self):
@@ -130,17 +194,21 @@ class PlayScreen:
         )
         if coins_hit:
             self.player.coins_collected += len(coins_hit)
-            self.score += 5 * len(coins_hit)
+            self.score += int(5 * len(coins_hit) * self.player.score_multiplier)
+            # Thêm hiệu ứng thu thập coin
+            for coin in coins_hit:
+                self.ui_manager.add_coin_collect_effect(coin.rect.centerx, coin.rect.centery)
         
-        # Ăn treasure
-        treasures_hit = pygame.sprite.spritecollide(
-            self.player, self.treasures, dokill=True, collided=pygame.sprite.collide_mask
+        # Ăn power-up
+        power_ups_hit = pygame.sprite.spritecollide(
+            self.player, self.power_ups, dokill=True, collided=pygame.sprite.collide_mask
         )
-        if treasures_hit:
-            self.score += 50 * len(treasures_hit)
+        if power_ups_hit:
+            for power_up in power_ups_hit:
+                self.power_up_manager.activate_power_up(power_up.power_up_type, self.player)
         
         # Nếu đang bất tử, bỏ qua va chạm với obstacle và monster
-        if self.invincible_timer > 0:
+        if self.invincible_timer > 0 or self.player.invincible:
             # Vẫn xử lý tree spawn monster
             trees_hit = pygame.sprite.spritecollide(
                 self.player, self.trees, dokill=False, collided=pygame.sprite.collide_mask
@@ -183,8 +251,12 @@ class PlayScreen:
         self.running = True
         while self.running and self.game.running:
             dt = self.clock.tick(FPS)
-            self.wave_offset += 2
-            self.scroll_y += 1
+            self.wave_offset += 5  
+            self.scroll_y += 4  
+            
+            # Cập nhật theme và UI
+            self.theme_manager.update(dt)
+            self.ui_manager.update(dt)
 
             # Countdown
             if self.countdown > 0:
@@ -196,15 +268,27 @@ class PlayScreen:
             # Event
             for e in pygame.event.get():
                 if e.type == pygame.QUIT:
+                    pygame.mixer.music.stop()  # Dừng nhạc khi thoát
                     self.running = False
                     self.game.running = False
                 elif e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
+                    pygame.mixer.music.stop()  # Dừng nhạc khi quay lại menu
                     self.game.state = "start"
                     self.running = False
-                elif e.type == pygame.MOUSEBUTTONDOWN and self.countdown > 0:
-                    if self.back_button.collidepoint(e.pos):
+                elif e.type == pygame.MOUSEBUTTONDOWN:
+                    if self.countdown > 0 and self.back_button.collidepoint(e.pos):
+                        pygame.mixer.music.stop()  # Dừng nhạc khi quay lại menu
                         self.game.state = "start"
                         self.running = False
+                    else:
+                        # Xử lý click UI
+                        ui_action = self.ui_manager.handle_click(e.pos)
+                        if ui_action == "pause":
+                            # TODO: Implement pause functionality
+                            pass
+                        elif ui_action == "settings":
+                            # TODO: Implement settings functionality
+                            pass
 
             # Vẽ nền
             self.draw_background()
@@ -212,11 +296,13 @@ class PlayScreen:
             # Update / spawn
             if self.countdown <= 0:
                 self.spawner.maybe_spawn_every_frame(dt)
+                self.power_up_manager.update(dt, self.player)
                 self.obstacles.update(dt, 0)
                 self.coins.update(dt, 0)
                 self.treasures.update(dt, 0)
                 self.trees.update(dt, 0)
                 self.monsters.update(dt, 0)
+                self.power_ups.update(dt, 0)
             else:
                 # countdown thì update nhẹ thôi
                 self.obstacles.update(dt, 0)
@@ -224,6 +310,7 @@ class PlayScreen:
                 self.treasures.update(dt, 0)
                 self.trees.update(dt, 0)
                 self.monsters.update(dt, 0)
+                self.power_ups.update(dt, 0)
 
             # Update player (luôn hoạt động để hiệu ứng rơi xuống xuất hiện)
             mouse_pos = pygame.mouse.get_pos()
@@ -235,6 +322,11 @@ class PlayScreen:
             self.coins.draw(self.screen)
             self.treasures.draw(self.screen)
             self.monsters.draw(self.screen)
+            
+            # Vẽ power-ups với hiệu ứng glow
+            for power_up in self.power_ups:
+                power_up.draw_glow_effect(self.screen)
+            self.power_ups.draw(self.screen)
             # Update invincible timer và hiệu ứng nhấp nháy
             if self.invincible_timer > 0:
                 self.invincible_timer -= dt
@@ -254,6 +346,20 @@ class PlayScreen:
             self.draw_back_button()
             self.draw_countdown()
             self.draw_score()
+            
+            # Vẽ hiệu ứng theme
+            self.theme_manager.draw_transition_effects(self.screen)
+            self.theme_manager.draw_night_effects(self.screen)
+            
+            # Vẽ hiệu ứng UI
+            self.ui_manager.draw_coin_collect_effects(self.screen)
+            
+            # Vẽ power-up status
+            self.ui_manager.draw_power_up_status(self.screen, self.power_up_manager)
+            
+            # Vẽ nút điều khiển
+            mouse_pos = pygame.mouse.get_pos()
+            self.ui_manager.draw_control_buttons(self.screen, mouse_pos)
 
             # Va chạm (sau khi countdown xong)
             if self.countdown <= 0:

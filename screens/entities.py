@@ -25,6 +25,13 @@ class Player(pygame.sprite.Sprite):
         # gameplay
         self.score = 0
         self.coins_collected = 0
+        
+        # Power-up effects
+        self.invincible = False
+        self.speed_multiplier = 1.0
+        self.magnet_active = False
+        self.score_multiplier = 1.0
+        self.magnet_radius = 150
 
     def update(self, dt, mouse_pos):
         if not self.active:
@@ -34,11 +41,13 @@ class Player(pygame.sprite.Sprite):
                 self.active = True
         else:
             mx, my = mouse_pos
-            self.rect.centerx += (mx - self.rect.centerx) * 0.12
+            # Áp dụng speed multiplier
+            move_speed = 0.12 * self.speed_multiplier
+            self.rect.centerx += (mx - self.rect.centerx) * move_speed
 
             # chỉ cho đi xuống
             if my > self.rect.centery:
-                self.rect.centery += min((my - self.rect.centery) * 0.05, 6)
+                self.rect.centery += min((my - self.rect.centery) * 0.05 * self.speed_multiplier, 6 * self.speed_multiplier)
 
             # giới hạn trong màn hình
             halfw = self.rect.width // 2
