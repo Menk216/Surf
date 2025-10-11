@@ -141,8 +141,8 @@ class UIManager:
         surface.blit(score_text, (score_x, score_y))
         
         # Label "SCORE" với style mới và outline (căn giữa)
-        label_text = self.button_font.render("ĐIỂM SỐ", True, (0, 255, 0))  # Xanh lá cây
-        label_outline = self.button_font.render("ĐIỂM SỐ", True, (0, 0, 0))
+        label_text = self.button_font.render("", True, (0, 255, 0))  # Xanh lá cây
+        label_outline = self.button_font.render("", True, (0, 0, 0))
         
         # Căn giữa label
         label_rect = label_text.get_rect()
@@ -225,7 +225,7 @@ class UIManager:
         surface.blit(coin_text, (coin_x, coin_y))
         
         # Label "COINS" với style mới (căn giữa)
-        label_text = self.button_font.render("ĐỒNG XU", True, (0, 255, 0))  # Xanh lá cây
+        label_text = self.button_font.render("", True, (0, 255, 0))  # Xanh lá cây
         
         # Căn giữa label
         label_rect = label_text.get_rect()

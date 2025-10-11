@@ -70,7 +70,7 @@ class PlayScreen:
         self.player = Player(player_img,
                              start_x=WIDTH//2, start_y=-200,
                              target_y=int(HEIGHT*0.62),
-                             size=(150,150), drop_speed=15)  # Tăng từ 12 lên 15
+                             size=(150,150), drop_speed=20)  # Tăng từ 12 lên 15
         self.player_group = pygame.sprite.GroupSingle(self.player)
 
         # Spawner

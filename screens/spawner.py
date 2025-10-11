@@ -39,13 +39,14 @@ class Spawner:
             [w//6, w//2, w*5//6]
         ]
 
-        # tỉ lệ spawn mặc định (per second, thay vì per frame → không phụ thuộc FPS)
+        # tỉ lệ spawn mỗi giây (nếu không truyền thì lấy mặc định)
         default_rates = {
-            'obstacle_group': 0.8,   # Tăng từ 0.48 lên 0.8
-            'single_obstacle': 2.0,   # Tăng từ 1.2 lên 2.0
-            'coin': 4.0,              # Tăng từ 2.7 lên 4.0
-            'tree': 1.0,              # Tăng từ 0.6 lên 1.0
+            'obstacle_group': 0.6,   # giảm bớt nhóm obstacle
+            'single_obstacle': 1.2,  # ít obstacle lẻ hơn
+            'coin': 4.0,
+            'tree': 1.0,
         }
+
         self.rates = rates if rates else default_rates
 
         # thời gian bắt đầu game (để tính delay spawn ban đầu)
@@ -77,11 +78,32 @@ class Spawner:
     # ---------- hàm spawn từng loại ----------
     def spawn_obstacle_group(self):
         pattern = random.choice(self.obstacle_patterns)
-        for x in pattern:
+        # Nếu pattern có ít hơn 2 phần tử thì chỉ spawn 1 vật cản
+        if len(pattern) <= 2:
+            max_obs = len(pattern)
+        else:
+            max_obs = random.randint(2, min(3, len(pattern)))
+
+        chosen_positions = random.sample(pattern, max_obs)
+
+        # Random bỏ trống 1 vị trí để tạo "lối đi an toàn"
+        if len(chosen_positions) > 1 and random.random() < 0.7:
+            safe_x = random.choice(chosen_positions)
+            chosen_positions.remove(safe_x)
+
+        for x in chosen_positions:
             img = random.choice(self.images.get('obstacles', []))
-            y = -random.randint(400, 700)  # spawn cao hơn màn hình → rớt từ từ xuống
-            obs = Obstacle(img, x, y=y, size=(220,220), speed=self.obstacle_speed)
+            y = -random.randint(400, 700)
+            obs = Obstacle(img, x, y=y, size=(220, 220), speed=self.obstacle_speed)
+
+            # Kiểm tra khoảng cách an toàn
+            too_close = any(abs(o.rect.centerx - x) < 180 for o in self.groups['obstacles'])
+            if too_close:
+                continue
+
             self._safe_add(obs, 'obstacles')
+
+
 
     def spawn_single_obstacle(self):
         x = random.randint(100, WIDTH-100)
