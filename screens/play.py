@@ -145,15 +145,6 @@ class PlayScreen:
         self.screen.blit(background_surface, (0, sy-HEIGHT))
         self.screen.blit(background_surface, (0, sy))
 
-    def draw_back_button(self):
-        """Vẽ nút quay lại (trong countdown)"""
-        if self.countdown > 0:
-            btn_surf = pygame.Surface(self.back_button.size, pygame.SRCALPHA)
-            pygame.draw.rect(btn_surf, (0,0,0,120), btn_surf.get_rect(), border_radius=15)
-            btn_surf.blit(self.back_icon,
-                          (self.back_button.width//2 - self.back_icon.get_width()//2,
-                           self.back_button.height//2 - self.back_icon.get_height()//2))
-            self.screen.blit(btn_surf, self.back_button.topleft)
 
     def draw_countdown(self):
         """Vẽ đồng hồ đếm ngược với theme"""
@@ -343,7 +334,6 @@ class PlayScreen:
             self.player_group.draw(self.screen)
 
             # HUD
-            self.draw_back_button()
             self.draw_countdown()
             self.draw_score()
             
