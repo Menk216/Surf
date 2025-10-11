@@ -14,7 +14,7 @@ class Player(pygame.sprite.Sprite):
         self.base_img = pygame.transform.smoothscale(image_surface, size)
         self.image = self.base_img
         self.rect = self.image.get_rect(center=(start_x, start_y))
-        self.mask = pygame.mask.from_surface(self.image)   # <--- thêm mask
+        self.mask = pygame.mask.from_surface(self.image)
 
         # dừng ở đâu khi rơi xuống
         self.target_y = target_y if target_y is not None else int(HEIGHT * 0.62)
@@ -25,7 +25,7 @@ class Player(pygame.sprite.Sprite):
         # gameplay
         self.score = 0
         self.coins_collected = 0
-        
+
         # Power-up effects
         self.invincible = False
         self.speed_multiplier = 1.0
@@ -35,31 +35,30 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, dt, mouse_pos):
         if not self.active:
+            # Giai đoạn rơi xuống
             if self.rect.centery < self.target_y:
                 self.rect.centery += self.drop_speed
             else:
                 self.active = True
         else:
             mx, my = mouse_pos
-            # Áp dụng speed multiplier
+
+            # Chỉ di chuyển theo trục X (trái - phải)
             move_speed = 0.12 * self.speed_multiplier
             self.rect.centerx += (mx - self.rect.centerx) * move_speed
 
-            # chỉ cho đi xuống
-            if my > self.rect.centery:
-                self.rect.centery += min((my - self.rect.centery) * 0.05 * self.speed_multiplier, 6 * self.speed_multiplier)
-
-            # giới hạn trong màn hình
+            # Giới hạn trong màn hình
             halfw = self.rect.width // 2
             self.rect.centerx = max(halfw, min(WIDTH - halfw, self.rect.centerx))
 
-            # nghiêng lướt
+            # Nghiêng lướt nhẹ
             self.angle_timer += dt
             angle = math.sin(self.angle_timer * 0.005) * 8
             old_center = self.rect.center
             self.image = pygame.transform.rotate(self.base_img, angle)
             self.rect = self.image.get_rect(center=old_center)
-            self.mask = pygame.mask.from_surface(self.image)   # <--- cập nhật mask khi xoay
+            self.mask = pygame.mask.from_surface(self.image)
+
 
 
 # ------------------------------

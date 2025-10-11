@@ -349,7 +349,7 @@ class PlayScreen:
             
             # Vẽ hiệu ứng theme
             self.theme_manager.draw_transition_effects(self.screen)
-            self.theme_manager.draw_night_effects(self.screen)
+            # self.theme_manager.draw_night_effects(self.screen)
             
             # Vẽ hiệu ứng UI
             self.ui_manager.draw_coin_collect_effects(self.screen)
