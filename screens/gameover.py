@@ -28,7 +28,7 @@ class GameOverScreen:
         self.popup_alpha = 255
 
     def create_buttons(self):
-        font = pygame.font.SysFont("Arial", 48, bold=True)
+        font = pygame.font.Font(None, 48)
         btn_w, btn_h = 320, 85
         spacing = 30
         start_y = HEIGHT * 0.55
@@ -82,7 +82,7 @@ class GameOverScreen:
             if self.popup_timer > self.popup_duration * 0.7:
                 self.popup_alpha = int(255 * (1 - (self.popup_timer - self.popup_duration * 0.7) / (self.popup_duration * 0.3)))
 
-            font = pygame.font.SysFont("Arial", 46, bold=True)
+            font = pygame.font.Font(None, 46)
             text_surf = font.render(self.popup_text, True, (255, 255, 255))
             text_surf.set_alpha(self.popup_alpha)
             bg = pygame.Surface((text_surf.get_width() + 40, text_surf.get_height() + 20), pygame.SRCALPHA)
@@ -124,7 +124,7 @@ class GameOverScreen:
             self.game.screen.blit(overlay, (0, 0))
 
             # Title
-            font_big = pygame.font.SysFont("Arial", 110, bold=True)
+            font_big = pygame.font.Font(None, 110)
             text = font_big.render("GAME OVER", True, (255, 50, 50))
             shadow = font_big.render("GAME OVER", True, (0, 0, 0))
             rect = text.get_rect(center=(WIDTH//2, HEIGHT * 0.3))

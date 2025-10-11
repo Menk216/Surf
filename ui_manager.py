@@ -7,16 +7,14 @@ class UIManager:
     def __init__(self, theme_manager):
         self.theme_manager = theme_manager
         
-        # Fonts - Sử dụng Arial để dễ nhìn hơn
-        self.score_font = pygame.font.SysFont("Arial", 48, bold=True)
-        self.coin_font = pygame.font.SysFont("Arial", 44, bold=True)
-        self.button_font = pygame.font.SysFont("Arial", 32, bold=True)
+        # Fonts - Sử dụng font mặc định để tránh biểu tượng "|"
+        self.score_font = pygame.font.Font(None, 48)
+        self.coin_font = pygame.font.Font(None, 44)
+        self.button_font = pygame.font.Font(None, 32)
         
         # UI Elements - Thiết kế mới đẹp hơn
         self.score_panel_rect = pygame.Rect(1600, 20, 320, 100)
         self.coin_panel_rect = pygame.Rect(1600, 130, 320, 80)
-        self.pause_button_rect = pygame.Rect(1600, 180, 60, 60)
-        self.settings_button_rect = pygame.Rect(1670, 180, 60, 60)
         
         # Animations
         self.score_pulse = 0
@@ -114,14 +112,20 @@ class UIManager:
         inner_rect = panel_rect.inflate(-8, -8)
         pygame.draw.rect(surface, (*theme['accent_color'][:3], 100), inner_rect, 2, border_radius=16)
         
-        # Icon điểm số (ngôi sao) với hiệu ứng
+        # Icon điểm số (ngôi sao) với hiệu ứng - sử dụng màu vàng rõ ràng
         star_rect = pygame.Rect(panel_rect.x + 20, panel_rect.y + 20, 60, 60)
-        self.draw_enhanced_star_icon(surface, star_rect, theme['accent_color'])
+        self.draw_enhanced_star_icon(surface, star_rect, (255, 255, 0))  # Màu vàng rõ ràng
         
         # Text điểm số với shadow và outline (màu xanh lá cây)
-        score_text = self.score_font.render(f"{score:,}", True, (0, 255, 0))  # Xanh lá cây
-        shadow_text = self.score_font.render(f"{score:,}", True, (0, 100, 0))  # Xanh lá cây đậm
-        outline_text = self.score_font.render(f"{score:,}", True, (0, 0, 0))
+        try:
+            score_text = self.score_font.render(f"{score:,}", True, (0, 255, 0))  # Xanh lá cây
+            shadow_text = self.score_font.render(f"{score:,}", True, (0, 100, 0))  # Xanh lá cây đậm
+            outline_text = self.score_font.render(f"{score:,}", True, (0, 0, 0))
+        except:
+            # Fallback nếu có lỗi font
+            score_text = pygame.font.Font(None, 48).render(f"{score:,}", True, (0, 255, 0))
+            shadow_text = pygame.font.Font(None, 48).render(f"{score:,}", True, (0, 100, 0))
+            outline_text = pygame.font.Font(None, 48).render(f"{score:,}", True, (0, 0, 0))
         
         # Căn giữa text điểm số
         score_rect = score_text.get_rect()
@@ -184,7 +188,7 @@ class UIManager:
         shadow_points = [(p[0] + 2, p[1] + 2) for p in points]
         pygame.draw.polygon(surface, (0, 0, 0, 100), shadow_points)
         
-        # Vẽ ngôi sao chính
+        # Vẽ ngôi sao chính với màu vàng rõ ràng
         pygame.draw.polygon(surface, color, points)
         
         # Vẽ inner glow
@@ -208,13 +212,18 @@ class UIManager:
         inner_rect = self.coin_panel_rect.inflate(-8, -8)
         pygame.draw.rect(surface, (*theme['accent_color'][:3], 100), inner_rect, 2, border_radius=16)
         
-        # Icon coin nâng cao
+        # Icon coin nâng cao - sử dụng màu vàng rõ ràng
         coin_rect = pygame.Rect(self.coin_panel_rect.x + 20, self.coin_panel_rect.y + 15, 50, 50)
-        self.draw_enhanced_coin_icon(surface, coin_rect, theme['accent_color'])
+        self.draw_enhanced_coin_icon(surface, coin_rect, (255, 255, 0))  # Màu vàng rõ ràng
         
         # Text coin với shadow (màu xanh lá cây)
-        coin_text = self.coin_font.render(f"{coins:,}", True, (0, 255, 0))  # Xanh lá cây
-        shadow_text = self.coin_font.render(f"{coins:,}", True, (0, 100, 0))  # Xanh lá cây đậm
+        try:
+            coin_text = self.coin_font.render(f"{coins:,}", True, (0, 255, 0))  # Xanh lá cây
+            shadow_text = self.coin_font.render(f"{coins:,}", True, (0, 100, 0))  # Xanh lá cây đậm
+        except:
+            # Fallback nếu có lỗi font
+            coin_text = pygame.font.Font(None, 44).render(f"{coins:,}", True, (0, 255, 0))
+            shadow_text = pygame.font.Font(None, 44).render(f"{coins:,}", True, (0, 100, 0))
         
         # Căn giữa text coin
         coin_rect = coin_text.get_rect()
@@ -261,23 +270,21 @@ class UIManager:
         center_y = rect.centery
         radius = rect.width // 2
         
-        # Hiệu ứng rotation
-        rotation = int(10 * math.sin(self.coin_sparkle_timer * 2))
-        
         # Vẽ shadow
         pygame.draw.circle(surface, (0, 0, 0, 100), (center_x + 2, center_y + 2), radius)
         
-        # Vẽ coin với gradient
-        for i in range(radius):
-            alpha = int(255 * (1 - i / radius))
-            coin_color = (*color[:3], alpha)
-            pygame.draw.circle(surface, coin_color, (center_x, center_y), radius - i)
+        # Vẽ coin với màu vàng rõ ràng
+        pygame.draw.circle(surface, color, (center_x, center_y), radius)
         
         # Vẽ border
-        pygame.draw.circle(surface, (*color[:3], 200), (center_x, center_y), radius, 3)
+        pygame.draw.circle(surface, (200, 200, 0), (center_x, center_y), radius, 3)
         
         # Vẽ ký hiệu $ với hiệu ứng
-        font = pygame.font.SysFont("Arial", radius, bold=True)
+        try:
+            font = pygame.font.Font(None, radius)  # Sử dụng font mặc định
+        except:
+            font = pygame.font.Font(None, radius)
+        
         dollar_text = font.render("$", True, (255, 255, 255))
         text_rect = dollar_text.get_rect(center=(center_x, center_y))
         surface.blit(dollar_text, text_rect)
@@ -287,13 +294,7 @@ class UIManager:
         """Vẽ các nút điều khiển"""
         theme = self.theme_manager.get_current_theme()
         
-        # Nút pause
-        pause_hovered = self.pause_button_rect.collidepoint(mouse_pos)
-        self.draw_button(surface, self.pause_button_rect, "⏸", pause_hovered, theme)
         
-        # Nút settings
-        settings_hovered = self.settings_button_rect.collidepoint(mouse_pos)
-        self.draw_button(surface, self.settings_button_rect, "⚙", settings_hovered, theme)
     
     def draw_button(self, surface, rect, icon, hovered, theme):
         """Vẽ nút với hiệu ứng"""
@@ -313,7 +314,7 @@ class UIManager:
         pygame.draw.rect(surface, border_color, rect, border_width, border_radius=15)
         
         # Icon
-        font = pygame.font.SysFont("Arial", 24, bold=True)
+        font = pygame.font.Font(None, 24)
         icon_text = font.render(icon, True, theme['text_color'])
         icon_rect = icon_text.get_rect(center=rect.center)
         surface.blit(icon_text, icon_rect)
@@ -336,50 +337,6 @@ class UIManager:
                 pygame.draw.circle(surface, (*theme['accent_color'][:3], sparkle_alpha), 
                                  (int(sparkle_x), int(sparkle_y)), 2)
     
-    def draw_power_up_status(self, surface, power_up_manager):
-        """Vẽ trạng thái power-ups đang hoạt động"""
-        theme = self.theme_manager.get_current_theme()
-        active_power_ups = power_up_manager.get_active_power_ups()
-        
-        if not active_power_ups:
-            return
-        
-        # Panel power-ups
-        panel_rect = pygame.Rect(30, 100, 300, len(active_power_ups) * 50 + 20)
-        
-        # Background
-        pygame.draw.rect(surface, (*theme['ui_color'][:3], 200), panel_rect, border_radius=15)
-        pygame.draw.rect(surface, theme['accent_color'], panel_rect, 2, border_radius=15)
-        
-        # Vẽ từng power-up
-        y_offset = 10
-        for power_up_type in active_power_ups:
-            power_up_rect = pygame.Rect(40, 110 + y_offset, 280, 40)
-            
-            # Background power-up
-            pygame.draw.rect(surface, (*theme['ui_color'][:3], 150), power_up_rect, border_radius=10)
-            
-            # Icon
-            icon_font = pygame.font.SysFont("Arial", 20)
-            icon_text = icon_font.render("⚡", True, theme['accent_color'])  # Placeholder icon
-            surface.blit(icon_text, (power_up_rect.x + 10, power_up_rect.y + 10))
-            
-            # Name
-            name_font = pygame.font.SysFont("Arial", 16, bold=True)
-            name_text = name_font.render("Power-up", True, theme['text_color'])
-            surface.blit(name_text, (power_up_rect.x + 40, power_up_rect.y + 5))
-            
-            # Timer
-            timer = power_up_manager.get_power_up_timer(power_up_type)
-            timer_text = name_font.render(f"{timer//1000:.1f}s", True, theme['accent_color'])
-            surface.blit(timer_text, (power_up_rect.x + 40, power_up_rect.y + 20))
-            
-            # Progress bar
-            progress_width = int(200 * (timer / 10000))  # Assuming 10s max duration
-            progress_rect = pygame.Rect(power_up_rect.x + 40, power_up_rect.y + 30, progress_width, 5)
-            pygame.draw.rect(surface, theme['accent_color'], progress_rect, border_radius=2)
-            
-            y_offset += 50
     
     def draw_theme_indicator(self, surface):
         """Vẽ chỉ báo theme hiện tại"""
@@ -398,8 +355,12 @@ class UIManager:
         progress_rect = pygame.Rect(32, 32, progress_width, 36)
         pygame.draw.rect(surface, theme['accent_color'], progress_rect, border_radius=18)
         
-        # Text
-        theme_text = self.button_font.render(f"{theme['name']}", True, theme['text_color'])
+        # Text theme
+        try:
+            theme_text = self.button_font.render(f"{theme['name']}", True, theme['text_color'])
+        except:
+            # Fallback nếu có lỗi font
+            theme_text = pygame.font.Font(None, 32).render(f"{theme['name']}", True, theme['text_color'])
         text_rect = theme_text.get_rect(center=indicator_rect.center)
         surface.blit(theme_text, text_rect)
         
@@ -409,14 +370,15 @@ class UIManager:
         else:
             icon = "🌙"
         
-        icon_font = pygame.font.SysFont("Arial", 20)
+        # Sử dụng font hỗ trợ Unicode tốt hơn
+        try:
+            icon_font = pygame.font.Font(None, 24)  # Sử dụng font mặc định
+        except:
+            icon_font = pygame.font.Font(None, 20)
+        
         icon_text = icon_font.render(icon, True, theme['text_color'])
         surface.blit(icon_text, (indicator_rect.x + 10, indicator_rect.y + 10))
     
     def handle_click(self, mouse_pos):
         """Xử lý click chuột"""
-        if self.pause_button_rect.collidepoint(mouse_pos):
-            return "pause"
-        elif self.settings_button_rect.collidepoint(mouse_pos):
-            return "settings"
         return None

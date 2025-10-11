@@ -6,7 +6,6 @@ from screens.entities import Player
 from screens.spawner import Spawner
 from theme_manager import ThemeManager
 from ui_manager import UIManager
-from power_up_manager import PowerUpManager
 
 class PlayScreen:
     def __init__(self, game):
@@ -45,15 +44,13 @@ class PlayScreen:
         self.treasures = pygame.sprite.Group()
         self.trees = pygame.sprite.Group()
         self.monsters = pygame.sprite.Group()
-        self.power_ups = pygame.sprite.Group()
 
         groups = {
             'obstacles': self.obstacles,
             'coins': self.coins,
             'treasures': self.treasures,
             'trees': self.trees,
-            'monsters': self.monsters,
-            'power_ups': self.power_ups
+            'monsters': self.monsters
         }
 
         # Ảnh vật thể (lấy từ game hoặc None)
@@ -76,8 +73,6 @@ class PlayScreen:
         # Spawner
         self.spawner = Spawner(game, groups, images)
         
-        # Power-up Manager
-        self.power_up_manager = PowerUpManager(game, groups, images)
 
         # Gameplay
         self.running = False
@@ -152,7 +147,7 @@ class PlayScreen:
             theme = self.theme_manager.get_current_theme()
             pulse = 1.0 + 0.12 * math.sin(pygame.time.get_ticks() * 0.01)
             size = int(200 * pulse)
-            font = pygame.font.SysFont("Arial", size, bold=True)
+            font = pygame.font.Font(None, size)
             text = font.render(str(self.countdown), True, theme['accent_color'])
             shadow = font.render(str(self.countdown), True, theme['shadow_color'])
             rect = text.get_rect(center=(WIDTH//2, HEIGHT//2))
@@ -189,14 +184,6 @@ class PlayScreen:
             # Thêm hiệu ứng thu thập coin
             for coin in coins_hit:
                 self.ui_manager.add_coin_collect_effect(coin.rect.centerx, coin.rect.centery)
-        
-        # Ăn power-up
-        power_ups_hit = pygame.sprite.spritecollide(
-            self.player, self.power_ups, dokill=True, collided=pygame.sprite.collide_mask
-        )
-        if power_ups_hit:
-            for power_up in power_ups_hit:
-                self.power_up_manager.activate_power_up(power_up.power_up_type, self.player)
         
         # Nếu đang bất tử, bỏ qua va chạm với obstacle và monster
         if self.invincible_timer > 0 or self.player.invincible:
@@ -274,12 +261,7 @@ class PlayScreen:
                     else:
                         # Xử lý click UI
                         ui_action = self.ui_manager.handle_click(e.pos)
-                        if ui_action == "pause":
-                            # TODO: Implement pause functionality
-                            pass
-                        elif ui_action == "settings":
-                            # TODO: Implement settings functionality
-                            pass
+                        # Không còn xử lý settings
 
             # Vẽ nền
             self.draw_background()
@@ -287,13 +269,11 @@ class PlayScreen:
             # Update / spawn
             if self.countdown <= 0:
                 self.spawner.maybe_spawn_every_frame(dt)
-                self.power_up_manager.update(dt, self.player)
                 self.obstacles.update(dt, 0)
                 self.coins.update(dt, 0)
                 self.treasures.update(dt, 0)
                 self.trees.update(dt, 0)
                 self.monsters.update(dt, 0)
-                self.power_ups.update(dt, 0)
             else:
                 # countdown thì update nhẹ thôi
                 self.obstacles.update(dt, 0)
@@ -301,7 +281,6 @@ class PlayScreen:
                 self.treasures.update(dt, 0)
                 self.trees.update(dt, 0)
                 self.monsters.update(dt, 0)
-                self.power_ups.update(dt, 0)
 
             # Update player (luôn hoạt động để hiệu ứng rơi xuống xuất hiện)
             mouse_pos = pygame.mouse.get_pos()
@@ -314,10 +293,6 @@ class PlayScreen:
             self.treasures.draw(self.screen)
             self.monsters.draw(self.screen)
             
-            # Vẽ power-ups với hiệu ứng glow
-            for power_up in self.power_ups:
-                power_up.draw_glow_effect(self.screen)
-            self.power_ups.draw(self.screen)
             # Update invincible timer và hiệu ứng nhấp nháy
             if self.invincible_timer > 0:
                 self.invincible_timer -= dt
@@ -344,8 +319,6 @@ class PlayScreen:
             # Vẽ hiệu ứng UI
             self.ui_manager.draw_coin_collect_effects(self.screen)
             
-            # Vẽ power-up status
-            self.ui_manager.draw_power_up_status(self.screen, self.power_up_manager)
             
             # Vẽ nút điều khiển
             mouse_pos = pygame.mouse.get_pos()
