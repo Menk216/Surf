@@ -81,14 +81,16 @@ class PlayScreen:
         self.invincible_timer = 0  # Timer bất tử (ms)
         self.invincible_blink_timer = 0  # Timer cho hiệu ứng nhấp nháy
         
-        # Khởi tạo và phát nhạc nền cho PlayScreen
+       # Khởi tạo và phát nhạc nền cho PlayScreen
         try:
             pygame.mixer.music.load("resources/assets/sound/sound.mp3")
-            pygame.mixer.music.set_volume(0.7)  # Âm lượng 70%
+            import settings as settings_module
+            pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # SỬ DỤNG VOLUME TỪ SETTINGS
             pygame.mixer.music.play(-1)  # Lặp vô hạn
-            print("PlayScreen music started!")
+            print(f"PlayScreen music started with volume {settings_module.CURRENT_VOLUME}!")
         except pygame.error as e:
             print(f"Cannot load PlayScreen music: {e}")
+
 
 
     # ---------------- Vẽ nền ----------------

@@ -125,8 +125,9 @@ class StartScreen:
         try:
             pygame.mixer.music.load("resources/assets/sound/sound.mp3")
             import settings as settings_module
-            pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # Sử dụng volume từ settings
+            pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # SỬ DỤNG VOLUME TỪ SETTINGS
             pygame.mixer.music.play(-1)  # Lặp vô hạn
+            print(f"StartScreen music started with volume {settings_module.CURRENT_VOLUME}!")
         except pygame.error as e:
             print(f"Không thể tải nhạc nền: {e}")
 
@@ -235,11 +236,6 @@ class StartScreen:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_rect.collidepoint(mouse_pos):
                         pygame.mixer.music.stop()  # Dừng nhạc khi chuyển màn hình
-                        self.game.state = "play"
-                        running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.button_rect.collidepoint(mouse_pos):
-                        pygame.mixer.music.stop()
                         self.game.state = "play"
                         running = False
                     elif self.settings_button.collidepoint(mouse_pos):

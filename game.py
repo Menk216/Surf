@@ -51,7 +51,6 @@ class Game:
     
     def run(self):
         start_screen = StartScreen(self)
-        play_screen = None  # Sẽ khởi tạo khi cần
         settings_screen = SettingsScreen(self)
         
         while self.running:
@@ -60,19 +59,30 @@ class Game:
             elif self.state == "settings":
                 settings_screen.run()
             elif self.state == "play":
-                # Khởi tạo PlayScreen với cấu hình độ khó hiện tại
+                # Lấy cấu hình độ khó hiện tại
                 import settings as settings_module
                 difficulty_config = DIFFICULTY_CONFIGS[settings_module.CURRENT_DIFFICULTY]
                 
+                # Khởi tạo PlayScreen với độ khó được cấu hình
                 play_screen = PlayScreen(self)
-                # Cập nhật spawner với độ khó mới
-                play_screen.spawner.obstaclespeed = difficulty_config["obstacle_speed"]
-                play_screen.spawner.coinspeed = difficulty_config["coin_speed"]
-                play_screen.spawner.treespeed = difficulty_config["tree_speed"]
-                play_screen.spawner.treasurespeed = difficulty_config["treasure_speed"]
-                play_screen.spawner.monsterspeed = difficulty_config["monster_speed"]
+                
+                # CẬP NHẬT SPAWNER VỚI ĐỘ KHÓ MỚI
+                play_screen.spawner.obstacle_speed = difficulty_config["obstacle_speed"]
+                play_screen.spawner.coin_speed = difficulty_config["coin_speed"]
+                play_screen.spawner.tree_speed = difficulty_config["tree_speed"]
+                play_screen.spawner.treasure_speed = difficulty_config["treasure_speed"]
+                play_screen.spawner.monster_speed = difficulty_config["monster_speed"]
                 play_screen.spawner.rates = difficulty_config["spawn_rates"]
                 
+                print(f"Starting game with difficulty: {settings_module.CURRENT_DIFFICULTY}")
+                print(f"Obstacle speed: {difficulty_config['obstacle_speed']}")
+                print(f"Spawn rates: {difficulty_config['spawn_rates']}")
+                
                 play_screen.run()
+            elif self.state == "game_over":
+                from screens.gameover import GameOverScreen
+                gameover_screen = GameOverScreen(self, None)
+                gameover_screen.run()
         
         pygame.quit()
+
