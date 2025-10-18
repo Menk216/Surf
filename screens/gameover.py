@@ -32,14 +32,15 @@ class GameOverScreen:
         btn_w, btn_h = 320, 85
         spacing = 30
         start_y = HEIGHT * 0.55
-
-        btn_names = ["Restart", "Continue", "Quit"]
+        
+        # ĐỔI "Quit" THÀNH "Back to Menu"
+        btn_names = ["Restart", "Continue", "Back to Menu"]
         color_pairs = [
             ((255, 255, 255), (220, 220, 220)),
             ((100, 255, 100), (40, 180, 40)),
-            ((255, 100, 100), (180, 40, 40))
+            ((100, 200, 255), (40, 120, 200))  # Màu xanh thay vì đỏ
         ]
-
+        
         for i, (name, colors) in enumerate(zip(btn_names, color_pairs)):
             rect = pygame.Rect(WIDTH//2 - btn_w//2, start_y + i*(btn_h + spacing), btn_w, btn_h)
             self.buttons[name] = {
@@ -112,7 +113,7 @@ class GameOverScreen:
                         if self.handle_continue():
                             running = False
                     elif event.key == pygame.K_q:
-                        self.handle_quit()
+                        self.handle_back_to_menu()
                         running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     mouse_click = True
@@ -145,11 +146,9 @@ class GameOverScreen:
                     elif name == "Continue":
                         if self.handle_continue():
                             running = False
-                    elif name == "Quit":
-                        self.handle_quit()
+                    elif name == "Back to Menu":  # ĐỔI TÊN
+                        self.handle_back_to_menu()  # ĐỔI HÀM
                         running = False
-                elif hover and mouse_click and disabled:
-                    self.show_popup("No continues remaining!")
 
             # Draw popup
             self.draw_popup(self.game.screen, dt)
@@ -179,8 +178,8 @@ class GameOverScreen:
         self.play_screen.run()
         return True
 
-    def handle_quit(self):
-        self.game.running = False
+    def handle_back_to_menu(self):
+        self.game.state = "start"
 
     def show_popup(self, message):
         """Display popup text."""

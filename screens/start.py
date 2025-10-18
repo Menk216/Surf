@@ -106,13 +106,18 @@ class StartScreen:
         # Text tiêu đề
         self.title_text = self.title_font.render("Fantascy Suffer", True, (125, 147, 255))
 
-        # Nút start
+       # Nút start (giữ nguyên)
         self.button_rect = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2, 400, 100)
         self.button_text = self.button_font.render("Start", True, (255, 255, 255))
 
-        # Nút Settings
+        # Nút Settings (THÊM)
         self.settings_button = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2 + 130, 400, 80)
         self.settings_text = self.button_font.render("Settings", True, (255, 255, 255))
+
+        # Nút Quit (THÊM)
+        self.quit_button = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2 + 240, 400, 80)
+        self.quit_text = self.button_font.render("Quit", True, (255, 255, 255))
+
 
         # Hiệu ứng - tăng số lượng bọt
         self.bubbles = [Bubble() for _ in range(120)]
@@ -201,7 +206,7 @@ class StartScreen:
             self.screen.blit(self.button_text,
                            (self.button_rect.centerx - self.button_text.get_width() // 2,
                             self.button_rect.centery - self.button_text.get_height() // 2))
-            # Vẽ nút Settings
+            # VẼ NÚT SETTINGS
             settings_pulse = math.sin(self.button_pulse * 0.8) * 6
             settings_glow = math.sin(self.button_pulse * 0.5) * 12
 
@@ -221,6 +226,25 @@ class StartScreen:
                             (self.settings_button.centerx - self.settings_text.get_width() // 2,
                             self.settings_button.centery - self.settings_text.get_height() // 2))
 
+            # VẼ NÚT QUIT
+            quit_pulse = math.sin(self.button_pulse * 0.6) * 5
+            quit_glow = math.sin(self.button_pulse * 0.4) * 10
+
+            quit_glow_rect = self.quit_button.inflate(12 + quit_glow, 6 + quit_glow//2)
+            draw_gradient_rect(self.screen, quit_glow_rect,
+                            (80, 50, 50, 20), (120, 70, 70, 40), border_radius=32)
+
+            quit_main_rect = self.quit_button.inflate(quit_pulse, quit_pulse//2)
+            draw_gradient_rect(self.screen, quit_main_rect,
+                            (220, 80, 80), (180, 50, 50), border_radius=28)
+
+            quit_border_alpha = int(70 + math.sin(self.button_pulse) * 35)
+            pygame.draw.rect(self.screen, (255, 150, 150, quit_border_alpha), 
+                            quit_main_rect, 3, border_radius=28)
+
+            self.screen.blit(self.quit_text,
+                            (self.quit_button.centerx - self.quit_text.get_width() // 2,
+                            self.quit_button.centery - self.quit_text.get_height() // 2))
 
             # Sự kiện
             for event in pygame.event.get():
@@ -235,12 +259,15 @@ class StartScreen:
                         self.game.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_rect.collidepoint(mouse_pos):
-                        pygame.mixer.music.stop()  # Dừng nhạc khi chuyển màn hình
+                        pygame.mixer.music.stop()
                         self.game.state = "play"
                         running = False
                     elif self.settings_button.collidepoint(mouse_pos):
-                        # Chuyển sang màn hình settings
                         self.game.state = "settings"
+                        running = False
+                    elif self.quit_button.collidepoint(mouse_pos):
+                        pygame.mixer.music.stop()
+                        self.game.running = False
                         running = False
 
             pygame.display.flip()

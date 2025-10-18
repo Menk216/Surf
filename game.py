@@ -59,14 +59,13 @@ class Game:
             elif self.state == "settings":
                 settings_screen.run()
             elif self.state == "play":
-                # Lấy cấu hình độ khó hiện tại
+                # Áp dụng cấu hình độ khó
                 import settings as settings_module
                 difficulty_config = DIFFICULTY_CONFIGS[settings_module.CURRENT_DIFFICULTY]
                 
-                # Khởi tạo PlayScreen với độ khó được cấu hình
                 play_screen = PlayScreen(self)
                 
-                # CẬP NHẬT SPAWNER VỚI ĐỘ KHÓ MỚI
+                # Cập nhật spawner với độ khó
                 play_screen.spawner.obstacle_speed = difficulty_config["obstacle_speed"]
                 play_screen.spawner.coin_speed = difficulty_config["coin_speed"]
                 play_screen.spawner.tree_speed = difficulty_config["tree_speed"]
@@ -74,15 +73,6 @@ class Game:
                 play_screen.spawner.monster_speed = difficulty_config["monster_speed"]
                 play_screen.spawner.rates = difficulty_config["spawn_rates"]
                 
-                print(f"Starting game with difficulty: {settings_module.CURRENT_DIFFICULTY}")
-                print(f"Obstacle speed: {difficulty_config['obstacle_speed']}")
-                print(f"Spawn rates: {difficulty_config['spawn_rates']}")
-                
                 play_screen.run()
-            elif self.state == "game_over":
-                from screens.gameover import GameOverScreen
-                gameover_screen = GameOverScreen(self, None)
-                gameover_screen.run()
         
         pygame.quit()
-
