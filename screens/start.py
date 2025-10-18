@@ -109,22 +109,27 @@ class StartScreen:
         # Nút start
         self.button_rect = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2, 400, 100)
         self.button_text = self.button_font.render("Start", True, (255, 255, 255))
-        
-        
+
+        # Nút Settings
+        self.settings_button = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2 + 130, 400, 80)
+        self.settings_text = self.button_font.render("Settings", True, (255, 255, 255))
+
         # Hiệu ứng - tăng số lượng bọt
         self.bubbles = [Bubble() for _ in range(120)]
         self.wave_offset = 0
         self.button_pulse = 0
         self.title_float = 0
         
-        # Khởi tạo và phát nhạc nền
+       # Khởi tạo và phát nhạc nền
         pygame.mixer.init()
         try:
             pygame.mixer.music.load("resources/assets/sound/sound.mp3")
-            pygame.mixer.music.set_volume(0.5)  # Âm lượng 50%
+            import settings as settings_module
+            pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # Sử dụng volume từ settings
             pygame.mixer.music.play(-1)  # Lặp vô hạn
         except pygame.error as e:
             print(f"Không thể tải nhạc nền: {e}")
+
 
     def draw_waves(self):
         wave_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
@@ -195,6 +200,25 @@ class StartScreen:
             self.screen.blit(self.button_text,
                            (self.button_rect.centerx - self.button_text.get_width() // 2,
                             self.button_rect.centery - self.button_text.get_height() // 2))
+            # Vẽ nút Settings
+            settings_pulse = math.sin(self.button_pulse * 0.8) * 6
+            settings_glow = math.sin(self.button_pulse * 0.5) * 12
+
+            settings_glow_rect = self.settings_button.inflate(15 + settings_glow, 8 + settings_glow//2)
+            draw_gradient_rect(self.screen, settings_glow_rect,
+                            (60, 120, 200, 25), (100, 160, 240, 45), border_radius=35)
+
+            settings_main_rect = self.settings_button.inflate(settings_pulse, settings_pulse//2)
+            draw_gradient_rect(self.screen, settings_main_rect,
+                            (100, 180, 240), (180, 120, 240), border_radius=30)
+
+            settings_border_alpha = int(80 + math.sin(self.button_pulse * 1.2) * 40)
+            pygame.draw.rect(self.screen, (255, 255, 255, settings_border_alpha), 
+                            settings_main_rect, 3, border_radius=30)
+
+            self.screen.blit(self.settings_text,
+                            (self.settings_button.centerx - self.settings_text.get_width() // 2,
+                            self.settings_button.centery - self.settings_text.get_height() // 2))
 
 
             # Sự kiện
@@ -212,6 +236,15 @@ class StartScreen:
                     if self.button_rect.collidepoint(mouse_pos):
                         pygame.mixer.music.stop()  # Dừng nhạc khi chuyển màn hình
                         self.game.state = "play"
+                        running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.button_rect.collidepoint(mouse_pos):
+                        pygame.mixer.music.stop()
+                        self.game.state = "play"
+                        running = False
+                    elif self.settings_button.collidepoint(mouse_pos):
+                        # Chuyển sang màn hình settings
+                        self.game.state = "settings"
                         running = False
 
             pygame.display.flip()

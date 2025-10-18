@@ -3,6 +3,7 @@ from settings import *
 from screens.start import StartScreen
 from screens.play import PlayScreen
 from screens.gameover import GameOverScreen
+from screens.settingsscreen import SettingsScreen
 
 class Game:
     def __init__(self):
@@ -50,12 +51,28 @@ class Game:
     
     def run(self):
         start_screen = StartScreen(self)
-        play_screen = PlayScreen(self)
+        play_screen = None  # Sẽ khởi tạo khi cần
+        settings_screen = SettingsScreen(self)
         
         while self.running:
             if self.state == "start":
                 start_screen.run()
+            elif self.state == "settings":
+                settings_screen.run()
             elif self.state == "play":
+                # Khởi tạo PlayScreen với cấu hình độ khó hiện tại
+                import settings as settings_module
+                difficulty_config = DIFFICULTY_CONFIGS[settings_module.CURRENT_DIFFICULTY]
+                
+                play_screen = PlayScreen(self)
+                # Cập nhật spawner với độ khó mới
+                play_screen.spawner.obstaclespeed = difficulty_config["obstacle_speed"]
+                play_screen.spawner.coinspeed = difficulty_config["coin_speed"]
+                play_screen.spawner.treespeed = difficulty_config["tree_speed"]
+                play_screen.spawner.treasurespeed = difficulty_config["treasure_speed"]
+                play_screen.spawner.monsterspeed = difficulty_config["monster_speed"]
+                play_screen.spawner.rates = difficulty_config["spawn_rates"]
+                
                 play_screen.run()
         
         pygame.quit()
