@@ -1,5 +1,4 @@
-WIDTH = 1280
-HEIGHT = 720
+WIDTH, HEIGHT = 1920, 1080
 FPS = 60
 TITLE = "Fantascy Suffer"
 

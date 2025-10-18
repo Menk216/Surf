@@ -130,13 +130,10 @@ class StartScreen:
         try:
             pygame.mixer.music.load("resources/assets/sound/sound.mp3")
             import settings as settings_module
-            pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # SỬ DỤNG VOLUME TỪ SETTINGS
-            pygame.mixer.music.play(-1)  # Lặp vô hạn
-            print(f"StartScreen music started with volume {settings_module.CURRENT_VOLUME}!")
+            pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # Áp dụng volume
+            pygame.mixer.music.play(-1)
         except pygame.error as e:
             print(f"Không thể tải nhạc nền: {e}")
-
-
     def draw_waves(self):
         wave_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         for i in range(3):

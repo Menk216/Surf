@@ -87,7 +87,6 @@ class PlayScreen:
             import settings as settings_module
             pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # ÁP DỤNG VOLUME
             pygame.mixer.music.play(-1)
-            print(f"PlayScreen music started with volume {settings_module.CURRENT_VOLUME}!")
         except pygame.error as e:
             print(f"Cannot load PlayScreen music: {e}")
 
