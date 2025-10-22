@@ -1,17 +1,30 @@
 import pygame
 from settings import *
 
-def draw_gradient_rect(surface, rect, color1, color2):
-    """Draw a vertical gradient rectangle."""
+def draw_rounded_gradient_rect(surface, rect, color1, color2, radius=18, border=4, border_color=(0,0,0)):
     x, y, w, h = rect
-    gradient = pygame.Surface((w, h), pygame.SRCALPHA)
+    grad = pygame.Surface((w, h), pygame.SRCALPHA)
+
+    # Vẽ gradient dọc
     for i in range(h):
-        ratio = i / h
-        r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
-        g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
-        b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
-        pygame.draw.line(gradient, (r, g, b), (0, i), (w, i))
-    surface.blit(gradient, (x, y))
+        ratio = i / max(1, h - 1)
+        r = int(color1[0]*(1-ratio) + color2[0]*ratio)
+        g = int(color1[1]*(1-ratio) + color2[1]*ratio)
+        b = int(color1[2]*(1-ratio) + color2[2]*ratio)
+        pygame.draw.line(grad, (r, g, b), (0, i), (w, i))
+
+    # Tạo mask bo góc (white = giữ, transparent = cắt)
+    mask = pygame.Surface((w, h), pygame.SRCALPHA)
+    pygame.draw.rect(mask, (255, 255, 255, 255), (0, 0, w, h), border_radius=radius)
+    # Nhân alpha để cắt 4 góc
+    grad.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+    # Dán lên màn hình
+    surface.blit(grad, (x, y))
+
+    # Vẽ viền
+    if border > 0:
+        pygame.draw.rect(surface, border_color, rect, border, border_radius=radius)
 
 class GameOverScreen:
     def __init__(self, game, play_screen):
@@ -58,7 +71,7 @@ class GameOverScreen:
             c1 = tuple(min(255, x + 30) for x in c1)
             c2 = tuple(min(255, x + 30) for x in c2)
 
-        draw_gradient_rect(screen, rect, c1, c2)
+        draw_rounded_gradient_rect(screen, rect, c1, c2, radius=18, border=4, border_color=(0,0,0))
         pygame.draw.rect(screen, (0, 0, 0), rect, 4, border_radius=18)
 
         if disabled:
