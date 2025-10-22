@@ -2,6 +2,7 @@ import pygame
 import random
 import math
 from settings import *
+from utils import resource_path
 
 def draw_gradient_rect(surface, rect, color1, color2, border_radius=0):
     """Vẽ gradient cho button"""
@@ -84,11 +85,11 @@ class SettingsScreen:
         self.clock = game.clock
         
         # Background
-        self.background = pygame.image.load("resources/assets/backgrounds/bg_startgame2.jpg")
+        self.background = pygame.image.load(resource_path("resources/assets/backgrounds/bg_startgame2.jpg"))
         self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
         
         # Fonts
-        self.title_font = pygame.font.Font("resources/assets/fonts/ClimateCrisis-Regular-VariableFont_YEAR.ttf", 100)
+        self.title_font = pygame.font.Font(resource_path("resources/assets/fonts/ClimateCrisis-Regular-VariableFont_YEAR.ttf"), 100)
         self.label_font = pygame.font.Font(None, 52)
         self.button_font = pygame.font.Font(None, 40)
         

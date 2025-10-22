@@ -2,6 +2,7 @@ import pygame
 import random
 import math
 from settings import *
+from utils import resource_path
 
 
 def draw_gradient_rect(surface, rect, color1, color2, border_radius=0):
@@ -96,11 +97,11 @@ class StartScreen:
         self.clock = game.clock
 
         # Background
-        self.background = pygame.image.load("resources/assets/backgrounds/bg_startgame2.jpg")
+        self.background = pygame.image.load(resource_path("resources/assets/backgrounds/bg_startgame2.jpg"))
         self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
 
         # Font chữ
-        self.title_font = pygame.font.Font("resources/assets/fonts/ClimateCrisis-Regular-VariableFont_YEAR.ttf", 120)
+        self.title_font = pygame.font.Font(resource_path("resources/assets/fonts/ClimateCrisis-Regular-VariableFont_YEAR.ttf"), 120)
         self.button_font = pygame.font.Font(None, 48)
 
         # Text tiêu đề
@@ -128,7 +129,7 @@ class StartScreen:
        # Khởi tạo và phát nhạc nền
         pygame.mixer.init()
         try:
-            pygame.mixer.music.load("resources/assets/sound/sound.mp3")
+            pygame.mixer.music.load(resource_path("resources/assets/sound/sound.mp3"))
             import settings as settings_module
             pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # Áp dụng volume
             pygame.mixer.music.play(-1)

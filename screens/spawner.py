@@ -2,6 +2,7 @@ from settings import *
 import pygame
 import random
 from screens.entities import Obstacle, Coin, Treasure, Tree, Monster
+from utils import resource_path
 
 class Spawner:
     def __init__(self, game, groups, images, speeds=None, spawn_delay_ms=2000, rates=None):  # Giảm delay từ 3000 xuống 2000

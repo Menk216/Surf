@@ -1,6 +1,7 @@
 import pygame
 import math
 import random
+from utils import resource_path
 
 class ThemeManager:
     def __init__(self):
@@ -25,8 +26,8 @@ class ThemeManager:
                 "particle_color": (255, 255, 255),
                 "ambient_light": 1.0,
                 "wave_intensity": 1.0,
-                "background_image": "resources/assets/backgrounds/test.jpg"
-            },
+                "background_image": resource_path("resources/assets/backgrounds/test.jpg")            
+                },
             "dark": {
                 "name": "Đêm",
                 "background_color": (2, 2, 15),
@@ -39,8 +40,8 @@ class ThemeManager:
                 "particle_color": (100, 150, 255),
                 "ambient_light": 0.1,
                 "wave_intensity": 0.3,
-                "background_image": "resources/assets/backgrounds/test.jpg"
-            }
+                "background_image": resource_path("resources/assets/backgrounds/test.jpg")            
+                }
         }
 
         # Hiệu ứng chuyển

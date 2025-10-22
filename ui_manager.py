@@ -2,6 +2,7 @@
 import pygame
 import math
 import random
+from utils import resource_path
 
 class UIManager:
     def __init__(self, theme_manager):

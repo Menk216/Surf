@@ -6,6 +6,7 @@ from screens.entities import Player
 from screens.spawner import Spawner
 from theme_manager import ThemeManager
 from ui_manager import UIManager
+from utils import resource_path
 
 class PlayScreen:
     def __init__(self, game):
@@ -24,14 +25,14 @@ class PlayScreen:
         self.ui_manager = UIManager(self.theme_manager)
         
         # Background
-        self.background = pygame.image.load("resources/assets/backgrounds/test.jpg").convert()
+        self.background = pygame.image.load(resource_path("resources/assets/backgrounds/test.jpg")).convert()
         self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
         self.wave_offset = 0     # hiệu ứng sóng ngang
         self.scroll_y = 0        # hiệu ứng cuộn dọc
 
         # Nút back (chỉ hiện trong countdown)
         self.back_button = pygame.Rect(30, 30, 60, 60)
-        self.back_icon = pygame.image.load("resources/assets/icon/return_icon.png").convert_alpha()
+        self.back_icon = pygame.image.load(resource_path("resources/assets/icon/return_icon.png")).convert_alpha()
         self.back_icon = pygame.transform.smoothscale(self.back_icon, (32, 32))
 
         # Countdown trước khi chơi
@@ -63,7 +64,7 @@ class PlayScreen:
         }
 
         # Player
-        player_img = getattr(game, 'player_img', "resources/assets/characters/player.png")
+        player_img = getattr(game, 'player_img', resource_path("resources/assets/characters/player.png"))
         self.player = Player(player_img,
                              start_x=WIDTH//2, start_y=-200,
                              target_y=int(HEIGHT*0.62),
@@ -83,7 +84,8 @@ class PlayScreen:
         
        # Khởi tạo và phát nhạc nền cho PlayScreen
         try:
-            pygame.mixer.music.load("resources/assets/sound/sound.mp3")
+            pygame.mixer.music.load(resource_path("resources/assets/sound/sound.mp3"))
+
             import settings as settings_module
             pygame.mixer.music.set_volume(settings_module.CURRENT_VOLUME)  # ÁP DỤNG VOLUME
             pygame.mixer.music.play(-1)
