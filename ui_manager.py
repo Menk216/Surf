@@ -367,9 +367,9 @@ class UIManager:
         
         # Icon theme
         if theme['name'] == "Ngày":
-            icon = ""
+            icon = "☀"
         else:
-            icon = ""
+            icon = "🌙"
         
         # Sử dụng font hỗ trợ Unicode tốt hơn
         try:
