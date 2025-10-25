@@ -2,15 +2,12 @@ WIDTH, HEIGHT = 1920, 1080
 FPS = 60
 TITLE = "Fantascy Suffer"
 
-# Cài đặt mặc định
-DEFAULT_VOLUME = 0.5  # 50%
-DEFAULT_DIFFICULTY = "medium"  # easy, medium, hard
+DEFAULT_VOLUME = 0.5
+DEFAULT_DIFFICULTY = "medium"
 
-# Cài đặt hiện tại
 CURRENT_VOLUME = DEFAULT_VOLUME
 CURRENT_DIFFICULTY = DEFAULT_DIFFICULTY
 
-# Cấu hình độ khó
 DIFFICULTY_CONFIGS = {
     "easy": {
         "obstacle_speed": 6,

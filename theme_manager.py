@@ -7,12 +7,11 @@ class ThemeManager:
     def __init__(self):
         self.current_theme = "light"
         self.theme_timer = 0
-        self.theme_duration = 30000  # 30 giây
+        self.theme_duration = 30000
         self.transition_timer = 0
         self.transition_duration = 2000
         self.is_transitioning = False
         
-        # Các theme
         self.themes = {
             "light": {
                 "name": "Ngày",
@@ -44,7 +43,6 @@ class ThemeManager:
                 }
         }
 
-        # Hiệu ứng chuyển
         self.transition_particles = []
     
     def get_current_theme(self):
@@ -104,7 +102,6 @@ class ThemeManager:
         self.is_transitioning = False
         self.transition_timer = 0
         
-        # Đổi theme
         self.current_theme = "dark" if self.current_theme == "light" else "light"
     
     def draw_transition_effects(self, screen):

@@ -5,7 +5,6 @@ def draw_rounded_gradient_rect(surface, rect, color1, color2, radius=18, border=
     x, y, w, h = rect
     grad = pygame.Surface((w, h), pygame.SRCALPHA)
 
-    # Vẽ gradient dọc
     for i in range(h):
         ratio = i / max(1, h - 1)
         r = int(color1[0]*(1-ratio) + color2[0]*ratio)
@@ -13,16 +12,13 @@ def draw_rounded_gradient_rect(surface, rect, color1, color2, radius=18, border=
         b = int(color1[2]*(1-ratio) + color2[2]*ratio)
         pygame.draw.line(grad, (r, g, b), (0, i), (w, i))
 
-    # Tạo mask bo góc (white = giữ, transparent = cắt)
     mask = pygame.Surface((w, h), pygame.SRCALPHA)
     pygame.draw.rect(mask, (255, 255, 255, 255), (0, 0, w, h), border_radius=radius)
-    # Nhân alpha để cắt 4 góc
+
     grad.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
 
-    # Dán lên màn hình
     surface.blit(grad, (x, y))
 
-    # Vẽ viền
     if border > 0:
         pygame.draw.rect(surface, border_color, rect, border, border_radius=radius)
 
@@ -34,10 +30,9 @@ class GameOverScreen:
         self.buttons = {}
         self.create_buttons()
 
-        # Popup notification
         self.popup_text = None
         self.popup_timer = 0
-        self.popup_duration = 1500  # ms
+        self.popup_duration = 1500
         self.popup_alpha = 255
 
     def create_buttons(self):
@@ -46,12 +41,11 @@ class GameOverScreen:
         spacing = 30
         start_y = HEIGHT * 0.55
         
-        # ĐỔI "Quit" THÀNH "Back to Menu"
         btn_names = ["Restart", "Continue", "Back to Menu"]
         color_pairs = [
             ((255, 255, 255), (220, 220, 220)),
             ((100, 255, 100), (40, 180, 40)),
-            ((100, 200, 255), (40, 120, 200))  # Màu xanh thay vì đỏ
+            ((100, 200, 255), (40, 120, 200))
         ]
         
         for i, (name, colors) in enumerate(zip(btn_names, color_pairs)):
@@ -92,7 +86,6 @@ class GameOverScreen:
                 self.popup_alpha = 255
                 return
 
-            # Fade out near the end
             if self.popup_timer > self.popup_duration * 0.7:
                 self.popup_alpha = int(255 * (1 - (self.popup_timer - self.popup_duration * 0.7) / (self.popup_duration * 0.3)))
 
@@ -131,13 +124,11 @@ class GameOverScreen:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     mouse_click = True
 
-            # Dimmed background
             self.game.screen.blit(gameplay_snapshot, (0, 0))
             overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 160))
             self.game.screen.blit(overlay, (0, 0))
 
-            # Title
             font_big = pygame.font.Font(None, 110)
             text = font_big.render("GAME OVER", True, (255, 50, 50))
             shadow = font_big.render("GAME OVER", True, (0, 0, 0))
@@ -145,7 +136,6 @@ class GameOverScreen:
             self.game.screen.blit(shadow, (rect.x + 5, rect.y + 5))
             self.game.screen.blit(text, rect)
 
-            # Buttons
             for name, button in self.buttons.items():
                 rect = button["rect"]
                 hover = rect.collidepoint(mouse_pos)
@@ -159,16 +149,14 @@ class GameOverScreen:
                     elif name == "Continue":
                         if self.handle_continue():
                             running = False
-                    elif name == "Back to Menu":  # ĐỔI TÊN
-                        self.handle_back_to_menu()  # ĐỔI HÀM
+                    elif name == "Back to Menu":
+                        self.handle_back_to_menu()
                         running = False
 
-            # Draw popup
             self.draw_popup(self.game.screen, dt)
 
             pygame.display.flip()
 
-    # === Button actions ===
     def handle_restart(self):
         from screens.play import PlayScreen
         play_screen = PlayScreen(self.game)
@@ -199,4 +187,4 @@ class GameOverScreen:
         self.popup_text = message
         self.popup_timer = 0
         self.popup_alpha = 255
-        self.popup_duration = 1500  # ms
+        self.popup_duration = 1500

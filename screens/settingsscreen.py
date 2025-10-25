@@ -84,35 +84,28 @@ class SettingsScreen:
         self.screen = game.screen
         self.clock = game.clock
         
-        # Background
         self.background = pygame.image.load(resource_path("resources/assets/backgrounds/bg_startgame2.jpg"))
         self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
         
-        # Fonts
         self.title_font = pygame.font.Font(resource_path("resources/assets/fonts/ClimateCrisis-Regular-VariableFont_YEAR.ttf"), 100)
         self.label_font = pygame.font.Font(None, 52)
         self.button_font = pygame.font.Font(None, 40)
         
-        # Title
         self.title_text = self.title_font.render("Settings", True, (125, 147, 255))
         
-        # Hiệu ứng
         self.bubbles = [Bubble() for _ in range(100)]
         self.wave_offset = 0
         self.title_float = 0
         
-        # Lấy cài đặt hiện tại từ settings
         import settings as settings_module
         self.volume = settings_module.CURRENT_VOLUME
         self.difficulty = settings_module.CURRENT_DIFFICULTY
         
-        # Vị trí thanh âm lượng
         self.volume_slider_x = WIDTH // 2 - 250
         self.volume_slider_y = HEIGHT // 2 - 80
         self.volume_slider_width = 500
         self.volume_slider_height = 20
         
-        # Rectangle cho slider
         self.volume_slider_rect = pygame.Rect(
             self.volume_slider_x, 
             self.volume_slider_y,
@@ -120,12 +113,10 @@ class SettingsScreen:
             self.volume_slider_height
         )
         
-        # Nút điều chỉnh âm lượng
         slider_handle_x = self.volume_slider_x + int(self.volume * self.volume_slider_width)
         self.volume_handle = pygame.Rect(slider_handle_x - 15, self.volume_slider_y - 10, 30, 40)
         self.dragging_volume = False
         
-        # Nút độ khó
         button_y = HEIGHT // 2 + 60
         button_spacing = 180
         center_x = WIDTH // 2
@@ -134,10 +125,8 @@ class SettingsScreen:
         self.medium_button = pygame.Rect(center_x - 60, button_y, 120, 60)
         self.hard_button = pygame.Rect(center_x + button_spacing - 60, button_y, 120, 60)
         
-        # Nút Back
         self.back_button = pygame.Rect(WIDTH // 2 - 100, HEIGHT - 150, 200, 70)
         
-        # Animation
         self.button_pulse = 0
     
     def draw_waves(self):
@@ -157,14 +146,12 @@ class SettingsScreen:
     
     def draw_slider(self):
         """Vẽ thanh trượt âm lượng"""
-        # Label
+
         volume_label = self.label_font.render("Volume", True, (255, 255, 255))
         self.screen.blit(volume_label, (self.volume_slider_x, self.volume_slider_y - 60))
         
-        # Thanh trượt nền
         pygame.draw.rect(self.screen, (80, 100, 150), self.volume_slider_rect, border_radius=10)
         
-        # Thanh trượt đã fill
         filled_width = int(self.volume * self.volume_slider_width)
         filled_rect = pygame.Rect(
             self.volume_slider_x,
@@ -174,11 +161,9 @@ class SettingsScreen:
         )
         pygame.draw.rect(self.screen, (120, 220, 255), filled_rect, border_radius=10)
         
-        # Handle (nút kéo)
         pygame.draw.circle(self.screen, (200, 140, 255), self.volume_handle.center, 20)
         pygame.draw.circle(self.screen, (255, 255, 255), self.volume_handle.center, 20, 3)
         
-        # Hiển thị giá trị phần trăm
         volume_percent = self.label_font.render(f"{int(self.volume * 100)}%", True, (255, 255, 255))
         self.screen.blit(volume_percent, (self.volume_slider_x + self.volume_slider_width + 30, self.volume_slider_y - 15))
     
@@ -186,12 +171,10 @@ class SettingsScreen:
         """Vẽ các nút chọn độ khó"""
         mouse_pos = pygame.mouse.get_pos()
         
-        # Label
         difficulty_label = self.label_font.render("Difficulty", True, (255, 255, 255))
         label_x = WIDTH // 2 - difficulty_label.get_width() // 2
         self.screen.blit(difficulty_label, (label_x, self.easy_button.y - 60))
         
-        # Định nghĩa các nút
         buttons = [
             (self.easy_button, "Easy", "easy"),
             (self.medium_button, "Medium", "medium"),
@@ -202,7 +185,6 @@ class SettingsScreen:
             is_selected = (self.difficulty == diff_value)
             is_hovered = button_rect.collidepoint(mouse_pos)
             
-            # Màu sắc
             if is_selected:
                 color1 = (200, 140, 255)
                 color2 = (120, 220, 255)
@@ -219,7 +201,6 @@ class SettingsScreen:
                 border_color = (150, 150, 150)
                 text_color = (200, 200, 200)
             
-            # Vẽ nút
             if is_selected:
                 glow_rect = button_rect.inflate(10, 10)
                 draw_gradient_rect(self.screen, glow_rect, (60, 120, 200, 30), (100, 160, 240, 50), border_radius=20)
@@ -227,7 +208,6 @@ class SettingsScreen:
             draw_gradient_rect(self.screen, button_rect, color1, color2, border_radius=15)
             pygame.draw.rect(self.screen, border_color, button_rect, 3, border_radius=15)
             
-            # Text
             button_text = self.button_font.render(text, True, text_color)
             text_rect = button_text.get_rect(center=button_rect.center)
             self.screen.blit(button_text, text_rect)
@@ -259,11 +239,9 @@ class SettingsScreen:
             self.volume = (mouse_pos[0] - self.volume_slider_x) / self.volume_slider_width
             self.volume = max(0.0, min(1.0, self.volume))
             
-            # Cập nhật vị trí handle
             slider_handle_x = self.volume_slider_x + int(self.volume * self.volume_slider_width)
             self.volume_handle.centerx = slider_handle_x
             
-            # Áp dụng âm lượng ngay lập tức
             pygame.mixer.music.set_volume(self.volume)
     
     def save_settings(self):
@@ -272,7 +250,6 @@ class SettingsScreen:
         settings_module.CURRENT_VOLUME = self.volume
         settings_module.CURRENT_DIFFICULTY = self.difficulty
         
-        # Áp dụng âm lượng
         pygame.mixer.music.set_volume(self.volume)
     
     def run(self):
@@ -284,25 +261,20 @@ class SettingsScreen:
             self.button_pulse += 0.1
             self.title_float += 0.05
             
-            # Vẽ background
             self.screen.blit(self.background, (0, 0))
             self.draw_waves()
             
-            # Vẽ bọt biển
             for bubble in self.bubbles:
                 bubble.update()
                 bubble.draw(self.screen)
             
-            # Vẽ tiêu đề
             title_y = 80 + math.sin(self.title_float) * 5
             self.screen.blit(self.title_text, (WIDTH // 2 - self.title_text.get_width() // 2, title_y))
             
-            # Vẽ các controls
             self.draw_slider()
             self.draw_difficulty_buttons()
             self.draw_back_button()
             
-            # Xử lý events
             mouse_pos = pygame.mouse.get_pos()
             
             for event in pygame.event.get():
@@ -318,16 +290,14 @@ class SettingsScreen:
                         running = False
                 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    # Kiểm tra click vào volume handle
+
                     if self.volume_handle.collidepoint(mouse_pos):
                         self.dragging_volume = True
                     
-                    # Kiểm tra click vào slider
                     elif self.volume_slider_rect.collidepoint(mouse_pos):
                         self.handle_volume_drag(mouse_pos)
                         self.dragging_volume = True
                     
-                    # Kiểm tra click vào difficulty buttons
                     elif self.easy_button.collidepoint(mouse_pos):
                         self.difficulty = "easy"
                     elif self.medium_button.collidepoint(mouse_pos):
@@ -335,7 +305,6 @@ class SettingsScreen:
                     elif self.hard_button.collidepoint(mouse_pos):
                         self.difficulty = "hard"
                     
-                    # Kiểm tra click vào back button
                     elif self.back_button.collidepoint(mouse_pos):
                         self.save_settings()
                         self.game.state = "start"

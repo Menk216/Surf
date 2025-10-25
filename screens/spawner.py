@@ -5,32 +5,19 @@ from screens.entities import Obstacle, Coin, Treasure, Tree, Monster
 from utils import resource_path
 
 class Spawner:
-    def __init__(self, game, groups, images, speeds=None, spawn_delay_ms=2000, rates=None):  # Giảm delay từ 3000 xuống 2000
+    def __init__(self, game, groups, images, speeds=None, spawn_delay_ms=2000, rates=None):
     
-
-        """
-        Spawner (bộ sinh vật thể trong game)
-
-        game: tham chiếu tới game chính (có thể lấy player, thông tin state, ...)
-        groups: dict chứa các sprite groups {'obstacles','coins','treasures','trees','monsters'}
-        images: dict chứa ảnh đã load {'obstacles':list, 'coin', 'treasure', 'trees':list, 'monster'}
-        speeds: dict tuỳ chỉnh tốc độ rơi của từng loại
-        spawn_delay_ms: delay (ms) lúc bắt đầu game để tránh spawn sớm khi player đang rơi xuống
-        rates: dict tuỳ chỉnh tỉ lệ spawn mỗi giây (spawn probability per second)
-        """
         self.game = game
         self.groups = groups
         self.images = images
 
-        # tốc độ rơi (nếu không truyền thì lấy mặc định)
         self.base_scroll_speed = 0
-        self.obstacle_speed = (speeds.get('obstacle') if speeds else 8)  # Tăng từ 6 lên 8
-        self.coin_speed = (speeds.get('coin') if speeds else 8)  # Tăng từ 6 lên 8
-        self.tree_speed = (speeds.get('tree') if speeds else 8)  # Tăng từ 6 lên 8
-        self.treasure_speed = (speeds.get('treasure') if speeds else 7)  # Tăng từ 5 lên 7
-        self.monster_speed = (speeds.get('monster') if speeds else 8)  # Tăng từ 6 lên 8
+        self.obstacle_speed = (speeds.get('obstacle') if speeds else 8)
+        self.coin_speed = (speeds.get('coin') if speeds else 8)
+        self.tree_speed = (speeds.get('tree') if speeds else 8)
+        self.treasure_speed = (speeds.get('treasure') if speeds else 7)
+        self.monster_speed = (speeds.get('monster') if speeds else 8)
 
-        # các pattern x cố định cho obstacles (để spawn theo hàng/cột)
         w = WIDTH
         self.obstacle_patterns = [
             [w//2],
@@ -40,46 +27,36 @@ class Spawner:
             [w//6, w//2, w*5//6]
         ]
 
-        # tỉ lệ spawn mỗi giây (nếu không truyền thì lấy mặc định)
         default_rates = {
-            'obstacle_group': 0.6,   # giảm bớt nhóm obstacle
-            'single_obstacle': 1.2,  # ít obstacle lẻ hơn
+            'obstacle_group': 0.6,
+            'single_obstacle': 1.2,
             'coin': 4.0,
             'tree': 1.0,
         }
 
         self.rates = rates if rates else default_rates
 
-        # thời gian bắt đầu game (để tính delay spawn ban đầu)
         self.start_time = pygame.time.get_ticks()
         self.spawn_delay = spawn_delay_ms
 
-        # timer cho rương báu (xuất hiện mỗi 2 phút)
         self.last_treasure_time = pygame.time.get_ticks()
-        self.treasure_interval = 120_000  # 2 phút (ms)
+        self.treasure_interval = 120_000
 
-    # ---------- hàm phụ ----------
     def _safe_add(self, sprite, group_key, max_attempts=5, jitter_x=60):
-        """
-        Thêm sprite vào group nhưng kiểm tra tránh chồng chéo quá mức.
-        - Nếu spawn bị overlap với obstacle/tree khác thì thử xê dịch ngang vài lần
-        - Nếu thử nhiều lần vẫn đè nhau thì bỏ qua
-        """
         for _ in range(max_attempts):
             collide_obs = pygame.sprite.spritecollideany(sprite, self.groups.get('obstacles', []))
             collide_trees = pygame.sprite.spritecollideany(sprite, self.groups.get('trees', []))
             if not collide_obs and not collide_trees:
                 self.groups[group_key].add(sprite)
                 return True
-            # dịch sprite sang trái/phải rồi thử lại
+
             sprite.rect.centerx = max(60, min(WIDTH-60,
                                   sprite.rect.centerx + random.randint(-jitter_x, jitter_x)))
-        return False  # bỏ qua nếu vẫn bị chồng
+        return False
 
-    # ---------- hàm spawn từng loại ----------
     def spawn_obstacle_group(self):
         pattern = random.choice(self.obstacle_patterns)
-        # Nếu pattern có ít hơn 2 phần tử thì chỉ spawn 1 vật cản
+
         if len(pattern) <= 2:
             max_obs = len(pattern)
         else:
@@ -87,7 +64,6 @@ class Spawner:
 
         chosen_positions = random.sample(pattern, max_obs)
 
-        # Random bỏ trống 1 vị trí để tạo "lối đi an toàn"
         if len(chosen_positions) > 1 and random.random() < 0.7:
             safe_x = random.choice(chosen_positions)
             chosen_positions.remove(safe_x)
@@ -97,14 +73,11 @@ class Spawner:
             y = -random.randint(400, 700)
             obs = Obstacle(img, x, y=y, size=(220, 220), speed=self.obstacle_speed)
 
-            # Kiểm tra khoảng cách an toàn
             too_close = any(abs(o.rect.centerx - x) < 180 for o in self.groups['obstacles'])
             if too_close:
                 continue
 
             self._safe_add(obs, 'obstacles')
-
-
 
     def spawn_single_obstacle(self):
         x = random.randint(100, WIDTH-100)
@@ -139,7 +112,7 @@ class Spawner:
             self.last_treasure_time = now
 
     def spawn_monster_from_tree(self, tree_sprite, player_sprite):
-        # spawn quái gần player để nó đuổi theo
+
         spawn_x = player_sprite.rect.centerx + random.randint(-80, 80)
         img = self.images.get('monster')
         if img:
@@ -147,19 +120,12 @@ class Spawner:
                         size=(260,260), speed=self.monster_speed)
             self.groups['monsters'].add(m)
 
-    # ---------- gọi mỗi frame ----------
     def maybe_spawn_every_frame(self, dt):
-        """
-        dt: mili-giây từ frame trước tới frame hiện tại
-        - spawn theo tỉ lệ mỗi giây (dựa vào dt)
-        - chặn spawn trong vài giây đầu để tránh player chết ngay khi vừa rơi xuống
-        """
-        # block spawn ban đầu (tránh chết tức thì)
         if pygame.time.get_ticks() - self.start_time < self.spawn_delay:
             self.spawn_treasure_if_needed()
             return
 
-        sec = dt / 1000.0  # đổi dt sang giây
+        sec = dt / 1000.0
         if random.random() < self.rates['obstacle_group'] * sec:
             self.spawn_obstacle_group()
         if random.random() < self.rates['single_obstacle'] * sec:
@@ -169,5 +135,4 @@ class Spawner:
         if random.random() < self.rates['tree'] * sec:
             self.spawn_tree()
 
-        # treasure dựa theo timer, không dựa random
         self.spawn_treasure_if_needed()

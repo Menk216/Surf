@@ -1,4 +1,3 @@
-# ui_manager.py
 import pygame
 import math
 import random
@@ -7,33 +6,28 @@ from utils import resource_path
 class UIManager:
     def __init__(self, theme_manager):
         self.theme_manager = theme_manager
-        
-        # Fonts - Sử dụng font mặc định để tránh biểu tượng "|"
+
         self.score_font = pygame.font.Font(None, 48)
         self.coin_font = pygame.font.Font(None, 44)
         self.button_font = pygame.font.Font(None, 32)
-        
-        # UI Elements - Thiết kế mới đẹp hơn
+
         self.score_panel_rect = pygame.Rect(1600, 20, 320, 100)
         self.coin_panel_rect = pygame.Rect(1600, 130, 320, 80)
         
-        # Animations
         self.score_pulse = 0
         self.coin_sparkle_timer = 0
         self.button_hover_timer = 0
-        
-        # Effects
+
         self.score_glow_timer = 0
         self.coin_collect_effects = []
         
     def update(self, dt):
         """Cập nhật animations và effects (tối ưu hóa)"""
-        self.score_pulse += dt * 0.001  # Giảm tốc độ animation
-        self.coin_sparkle_timer += dt * 0.002  # Giảm tốc độ animation
-        self.button_hover_timer += dt * 0.0005  # Giảm tốc độ animation
-        self.score_glow_timer += dt * 0.001  # Giảm tốc độ animation
-        
-        # Cập nhật coin collect effects
+        self.score_pulse += dt * 0.001
+        self.coin_sparkle_timer += dt * 0.002
+        self.button_hover_timer += dt * 0.0005
+        self.score_glow_timer += dt * 0.001
+   
         for effect in self.coin_collect_effects[:]:
             effect['timer'] += dt
             effect['y'] -= effect['speed']
@@ -69,7 +63,6 @@ class UIManager:
             
             pygame.draw.line(gradient_surface, (r, g, b, a), (0, i), (w, i))
         
-        # Vẽ border radius
         mask_surface = pygame.Surface((w, h), pygame.SRCALPHA)
         pygame.draw.rect(mask_surface, (255, 255, 255), (0, 0, w, h), border_radius=border_radius)
         gradient_surface.blit(mask_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
@@ -80,7 +73,7 @@ class UIManager:
         """Vẽ hiệu ứng glow (tối ưu hóa)"""
         glow_surface = pygame.Surface((rect.width + 10, rect.height + 10), pygame.SRCALPHA)
         
-        for i in range(3):  # Giảm từ 5 xuống 3 layers
+        for i in range(3):
             alpha = int(intensity * (1 - i / 3))
             glow_color = (*color[:3], alpha)
             glow_rect = pygame.Rect(i*3, i*3, rect.width + 10 - i*6, rect.height + 10 - i*6)
@@ -91,70 +84,51 @@ class UIManager:
     def draw_score_panel(self, surface, score):
         """Vẽ panel điểm số với thiết kế mới đẹp hơn"""
         theme = self.theme_manager.get_current_theme()
-        
-        # Hiệu ứng pulse nhẹ hơn
-        pulse_size = int(2 * math.sin(self.score_pulse))  # Giảm từ 3 xuống 2
+        pulse_size = int(2 * math.sin(self.score_pulse))
         panel_rect = self.score_panel_rect.inflate(pulse_size, pulse_size)
-        
-        # Glow effect mạnh hơn
+  
         glow_color = theme['glow_color']
         self.draw_glow_effect(surface, panel_rect, glow_color, 50)
-        
-        # Panel với gradient đẹp hơn
+    
         panel_color1 = (*theme['ui_color'][:3], 180)
         panel_color2 = (*theme['accent_color'][:3], 120)
         self.draw_gradient_panel(surface, panel_rect, panel_color1, panel_color2)
         
-        # Border gradient
         border_color = theme['accent_color']
         pygame.draw.rect(surface, border_color, panel_rect, 4, border_radius=20)
-        
-        # Inner border nhẹ
+       
         inner_rect = panel_rect.inflate(-8, -8)
         pygame.draw.rect(surface, (*theme['accent_color'][:3], 100), inner_rect, 2, border_radius=16)
         
-        # Icon điểm số (ngôi sao) với hiệu ứng - sử dụng màu vàng rõ ràng
         star_rect = pygame.Rect(panel_rect.x + 20, panel_rect.y + 20, 60, 60)
-        self.draw_enhanced_star_icon(surface, star_rect, (255, 255, 0))  # Màu vàng rõ ràng
-        
-        # Text điểm số với shadow và outline (màu xanh lá cây)
+        self.draw_enhanced_star_icon(surface, star_rect, (255, 255, 0))
+       
         try:
-            score_text = self.score_font.render(f"{score:,}", True, (0, 255, 0))  # Xanh lá cây
-            shadow_text = self.score_font.render(f"{score:,}", True, (0, 100, 0))  # Xanh lá cây đậm
+            score_text = self.score_font.render(f"{score:,}", True, (0, 255, 0))
+            shadow_text = self.score_font.render(f"{score:,}", True, (0, 100, 0))
             outline_text = self.score_font.render(f"{score:,}", True, (0, 0, 0))
         except:
-            # Fallback nếu có lỗi font
             score_text = pygame.font.Font(None, 48).render(f"{score:,}", True, (0, 255, 0))
             shadow_text = pygame.font.Font(None, 48).render(f"{score:,}", True, (0, 100, 0))
             outline_text = pygame.font.Font(None, 48).render(f"{score:,}", True, (0, 0, 0))
-        
-        # Căn giữa text điểm số
+   
         score_rect = score_text.get_rect()
         score_x = panel_rect.x + 90 + (panel_rect.width - 90 - score_rect.width) // 2
         score_y = panel_rect.y + 18
-        
-        # Vẽ outline (4 hướng)
+   
         surface.blit(outline_text, (score_x - 2, score_y))
         surface.blit(outline_text, (score_x + 2, score_y))
         surface.blit(outline_text, (score_x, score_y - 2))
         surface.blit(outline_text, (score_x, score_y + 2))
-        
-        # Vẽ shadow
         surface.blit(shadow_text, (score_x + 3, score_y + 3))
-        
-        # Vẽ text chính
         surface.blit(score_text, (score_x, score_y))
-        
-        # Label "SCORE" với style mới và outline (căn giữa)
-        label_text = self.button_font.render("", True, (0, 255, 0))  # Xanh lá cây
+        label_text = self.button_font.render("", True, (0, 255, 0))
         label_outline = self.button_font.render("", True, (0, 0, 0))
-        
-        # Căn giữa label
+
         label_rect = label_text.get_rect()
         label_x = panel_rect.x + 90 + (panel_rect.width - 90 - label_rect.width) // 2
         label_y = panel_rect.y + 58
-        
-        # Vẽ outline cho label
+  
         surface.blit(label_outline, (label_x - 2, label_y))
         surface.blit(label_outline, (label_x + 2, label_y))
         surface.blit(label_outline, (label_x, label_y - 2))
@@ -162,18 +136,15 @@ class UIManager:
         
         surface.blit(label_text, (label_x, label_y))
         
-    
     def draw_enhanced_star_icon(self, surface, rect, color):
         """Vẽ icon ngôi sao nâng cao với hiệu ứng"""
         center_x = rect.centerx
         center_y = rect.centery
         radius = rect.width // 2
-        
-        # Hiệu ứng twinkle nhẹ hơn
-        twinkle = int(3 * math.sin(self.score_pulse * 2))  # Giảm từ 5 xuống 3
+   
+        twinkle = int(3 * math.sin(self.score_pulse * 2))
         radius += twinkle
         
-        # Vẽ ngôi sao 5 cánh với gradient
         points = []
         for i in range(10):
             angle = i * math.pi / 5
@@ -185,14 +156,11 @@ class UIManager:
             y = center_y + r * math.sin(angle - math.pi / 2)
             points.append((x, y))
         
-        # Vẽ shadow
         shadow_points = [(p[0] + 2, p[1] + 2) for p in points]
         pygame.draw.polygon(surface, (0, 0, 0, 100), shadow_points)
         
-        # Vẽ ngôi sao chính với màu vàng rõ ràng
         pygame.draw.polygon(surface, color, points)
         
-        # Vẽ inner glow
         inner_points = [(p[0] * 0.7 + center_x * 0.3, p[1] * 0.7 + center_y * 0.3) for p in points]
         pygame.draw.polygon(surface, (*color[:3], 150), inner_points)
     
@@ -200,33 +168,27 @@ class UIManager:
         """Vẽ panel coin với thiết kế mới"""
         theme = self.theme_manager.get_current_theme()
         
-        # Panel gradient đẹp hơn
         panel_color1 = (*theme['ui_color'][:3], 180)
         panel_color2 = (*theme['accent_color'][:3], 120)
         self.draw_gradient_panel(surface, self.coin_panel_rect, panel_color1, panel_color2)
         
-        # Border gradient
         border_color = theme['accent_color']
         pygame.draw.rect(surface, border_color, self.coin_panel_rect, 4, border_radius=20)
         
-        # Inner border nhẹ
         inner_rect = self.coin_panel_rect.inflate(-8, -8)
         pygame.draw.rect(surface, (*theme['accent_color'][:3], 100), inner_rect, 2, border_radius=16)
         
-        # Icon coin nâng cao - sử dụng màu vàng rõ ràng
         coin_rect = pygame.Rect(self.coin_panel_rect.x + 20, self.coin_panel_rect.y + 15, 50, 50)
-        self.draw_enhanced_coin_icon(surface, coin_rect, (255, 255, 0))  # Màu vàng rõ ràng
+        self.draw_enhanced_coin_icon(surface, coin_rect, (255, 255, 0))
         
-        # Text coin với shadow (màu xanh lá cây)
         try:
-            coin_text = self.coin_font.render(f"{coins:,}", True, (0, 255, 0))  # Xanh lá cây
-            shadow_text = self.coin_font.render(f"{coins:,}", True, (0, 100, 0))  # Xanh lá cây đậm
+            coin_text = self.coin_font.render(f"{coins:,}", True, (0, 255, 0))
+            shadow_text = self.coin_font.render(f"{coins:,}", True, (0, 100, 0))
         except:
-            # Fallback nếu có lỗi font
+
             coin_text = pygame.font.Font(None, 44).render(f"{coins:,}", True, (0, 255, 0))
             shadow_text = pygame.font.Font(None, 44).render(f"{coins:,}", True, (0, 100, 0))
         
-        # Căn giữa text coin
         coin_rect = coin_text.get_rect()
         coin_x = self.coin_panel_rect.x + 85 + (self.coin_panel_rect.width - 85 - coin_rect.width) // 2
         coin_y = self.coin_panel_rect.y + 17
@@ -234,24 +196,20 @@ class UIManager:
         surface.blit(shadow_text, (coin_x + 3, coin_y + 3))
         surface.blit(coin_text, (coin_x, coin_y))
         
-        # Label "COINS" với style mới (căn giữa)
-        label_text = self.button_font.render("", True, (0, 255, 0))  # Xanh lá cây
+        label_text = self.button_font.render("", True, (0, 255, 0))
         
-        # Căn giữa label
         label_rect = label_text.get_rect()
         label_x = self.coin_panel_rect.x + 85 + (self.coin_panel_rect.width - 85 - label_rect.width) // 2
         label_y = self.coin_panel_rect.y + 45
         
         surface.blit(label_text, (label_x, label_y))
         
-    
     def draw_star_icon(self, surface, rect, color):
         """Vẽ icon ngôi sao"""
         center_x = rect.centerx
         center_y = rect.centery
         radius = rect.width // 2
         
-        # Vẽ ngôi sao 5 cánh
         points = []
         for i in range(10):
             angle = i * math.pi / 5
@@ -271,18 +229,14 @@ class UIManager:
         center_y = rect.centery
         radius = rect.width // 2
         
-        # Vẽ shadow
         pygame.draw.circle(surface, (0, 0, 0, 100), (center_x + 2, center_y + 2), radius)
         
-        # Vẽ coin với màu vàng rõ ràng
         pygame.draw.circle(surface, color, (center_x, center_y), radius)
         
-        # Vẽ border
         pygame.draw.circle(surface, (200, 200, 0), (center_x, center_y), radius, 3)
         
-        # Vẽ ký hiệu $ với hiệu ứng
         try:
-            font = pygame.font.Font(None, radius)  # Sử dụng font mặc định
+            font = pygame.font.Font(None, radius)
         except:
             font = pygame.font.Font(None, radius)
         
@@ -290,31 +244,25 @@ class UIManager:
         text_rect = dollar_text.get_rect(center=(center_x, center_y))
         surface.blit(dollar_text, text_rect)
         
-    
     def draw_control_buttons(self, surface, mouse_pos):
         """Vẽ các nút điều khiển"""
         theme = self.theme_manager.get_current_theme()
         
-        
-    
     def draw_button(self, surface, rect, icon, hovered, theme):
         """Vẽ nút với hiệu ứng"""
-        # Glow effect khi hover
+
         if hovered:
             glow_color = theme['glow_color']
             self.draw_glow_effect(surface, rect, glow_color, 40)
         
-        # Panel gradient
         panel_color1 = (*theme['ui_color'][:3], 200)
         panel_color2 = (*theme['accent_color'][:3], 150)
         self.draw_gradient_panel(surface, rect, panel_color1, panel_color2)
         
-        # Border
         border_color = theme['accent_color']
         border_width = 4 if hovered else 2
         pygame.draw.rect(surface, border_color, rect, border_width, border_radius=15)
         
-        # Icon
         font = pygame.font.Font(None, 24)
         icon_text = font.render(icon, True, theme['text_color'])
         icon_rect = icon_text.get_rect(center=rect.center)
@@ -330,7 +278,6 @@ class UIManager:
                              (int(effect['x']), int(effect['y'])), 
                              effect['size'])
             
-            # Hiệu ứng sparkle
             for i in range(3):
                 sparkle_x = effect['x'] + random.randint(-20, 20)
                 sparkle_y = effect['y'] + random.randint(-20, 20)
@@ -338,42 +285,35 @@ class UIManager:
                 pygame.draw.circle(surface, (*theme['accent_color'][:3], sparkle_alpha), 
                                  (int(sparkle_x), int(sparkle_y)), 2)
     
-    
     def draw_theme_indicator(self, surface):
         """Vẽ chỉ báo theme hiện tại"""
         theme = self.theme_manager.get_current_theme()
         progress = self.theme_manager.get_theme_progress()
         
-        # Panel chỉ báo
         indicator_rect = pygame.Rect(30, 30, 200, 40)
         
-        # Background
         pygame.draw.rect(surface, (*theme['ui_color'][:3], 150), indicator_rect, border_radius=20)
         pygame.draw.rect(surface, theme['accent_color'], indicator_rect, 2, border_radius=20)
         
-        # Progress bar
         progress_width = int(196 * progress)
         progress_rect = pygame.Rect(32, 32, progress_width, 36)
         pygame.draw.rect(surface, theme['accent_color'], progress_rect, border_radius=18)
         
-        # Text theme
         try:
             theme_text = self.button_font.render(f"{theme['name']}", True, theme['text_color'])
         except:
-            # Fallback nếu có lỗi font
+
             theme_text = pygame.font.Font(None, 32).render(f"{theme['name']}", True, theme['text_color'])
         text_rect = theme_text.get_rect(center=indicator_rect.center)
         surface.blit(theme_text, text_rect)
         
-        # Icon theme
         if theme['name'] == "Ngày":
             icon = "☀"
         else:
             icon = "🌙"
         
-        # Sử dụng font hỗ trợ Unicode tốt hơn
         try:
-            icon_font = pygame.font.Font(None, 24)  # Sử dụng font mặc định
+            icon_font = pygame.font.Font(None, 24)
         except:
             icon_font = pygame.font.Font(None, 20)
         
