@@ -308,9 +308,9 @@ class UIManager:
         surface.blit(theme_text, text_rect)
         
         if theme['name'] == "Ngày":
-            icon = "☀"
+            icon = ""
         else:
-            icon = "🌙"
+            icon = ""
         
         try:
             icon_font = pygame.font.Font(None, 24)
