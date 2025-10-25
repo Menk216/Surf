@@ -1,7 +1,6 @@
 WIDTH, HEIGHT = 1920, 1080
 FPS = 60
 TITLE = "Fantascy Suffer"
-
 DEFAULT_VOLUME = 0.5
 DEFAULT_DIFFICULTY = "medium"
 
